@@ -1,4 +1,4 @@
-]## Schema overview
+## Schema overview
 
 Use two core tables: nodes (shared metadata for files and directories) and data_blobs (file contents, optional). Represent hierarchy with a parent_id FK (adjacency list) and add a materialized path and optional nested-set or closure table for fast queries. Include hashes and timestamps for dedup, integrity, and incremental updates.
 
