@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 use steady_state::*;
 
 use std::path::{Path, PathBuf};
@@ -14,6 +16,11 @@ use hex;
 // TODO: implement state
 // TODO: implement file cruft_utils.rs for get_file_hash and other non actor utilities to reside in
 
+// Internal state that helps return back to last crawled entry
+pub(crate) struct CrawlerState {
+    pub(crate) abs_path:  PathBuf,
+    pub(crate) hash:      String,    
+}
 
 // derived fn that allow cloning and printing
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -29,9 +36,9 @@ pub(crate) struct FileMeta {
     pub readonly:  bool,
 } 
 
-// for easy debugging of struct if needed
-impl FileMeta {
 
+impl FileMeta {
+// for easy debugging of struct if needed
    pub fn meta_print(&self) {
 	println!("Printing Metadata Object -----------");
 	println!("Absolute_Path: {:?}", self.abs_path);
@@ -51,23 +58,30 @@ impl FileMeta {
 	Ok(serde_cbor::to_vec(self)?)
     }
 
-    // deserialize from bytes
+    // deserialize from bytes using bincode
     pub fn from_bytes(bytes: &[u8]) -> Result<Self, Box<dyn Error>> {
 	Ok(serde_cbor::from_slice(bytes)?)
     }
 }
 
-// run function 
-pub async fn run(actor: SteadyActorShadow,
-                 crawler_tx: SteadyTx<FileMeta>) -> Result<(),Box<dyn Error>> {
 
-    internal_behavior(actor.into_spotlight([], [&crawler_tx]), crawler_tx).await
+// run function 
+pub async fn run(actor: SteadyActorShadow, crawler_tx: SteadyTx<FileMeta>,
+                 state: SteadyState<CrawlerState>) -> Result<(),Box<dyn Error>> {
+
+    let actor = actor.into_spotlight([], [&crawler_tx]);
+
+	if actor.use_internal_behavior {
+	    internal_behavior(actor, crawler_tx, state).await
+	} else {
+	    actor.simulated_behavior(vec!(&crawler_tx)).await
+	}
 }
 
 
 // Internal behaviour for the actor
-async fn internal_behavior<A: SteadyActor>(mut actor: A,
-					   crawler_tx: SteadyTx<FileMeta> ) -> Result<(),Box<dyn Error>> {
+async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<FileMeta>,
+                                           state: SteadyState<CrawlerState>) -> Result<(),Box<dyn Error>> {
 
     let mut crawler_tx = crawler_tx.lock().await;
 
@@ -76,12 +90,11 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A,
     // let curr_env: PathBuf = env::current_dir()?;
     // let env_path: &Path = curr_env.as_path();
 
-    let path1 = Path::new("crawl_test/");
+    let path1 = Path::new("./src/test_directory/");
 
-    // convert pathbuf to path
-
+    // array of metadata structs
     let metas: Vec<FileMeta> = visit_dir(path1)?;
-
+    
     while actor.is_running(|| crawler_tx.mark_closed()) {
 
 	for m in &metas {
@@ -95,7 +108,6 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A,
     }
 	return Ok(());
 }
-
 
 
 // Read first 1024 bytes of file then hash, note that this hashes the bytes, not a string from the file
@@ -180,4 +192,3 @@ pub fn visit_dir(dir: &Path) -> Result<Vec<FileMeta>, Box<dyn Error>> {
     }
     Ok(metas)
 }
-
