@@ -5,27 +5,28 @@ It uses a local quantized LLM to help recommend safe deletions, and delivers a c
 # TODO 
 
 ## main functionality
-- [ ] TODO: parse config file to get directory that needs to be crawled
+- [ ] TODO: parse config file to get settings data
+- [ ] TODO: cpu scheduling with LLM
 
 ## crawler actor
-- [x] TODO: implement Walkdir and rewrite visit_dir()
+- [ ] TODO: Batching and Time-Based sending of Data
 - [ ] TODO: write function to compare hashes and then add that change to 'is_dupe' flag
 
 ## db_manager actor
 - [ ] TODO: Make Function for Write-Ahead Log
-- [x] TODO: push all the metadata into the Sled database 
 - [ ] TODO: use sled_view to see database
 - [ ] TODO: create DB schema for Sled
-- [ ] TODO: Implement state or communication to Database to ensure its crawling in correct location on actor failure
 
 ## LLM actor
+- [ ] TODO: Linear Regression Model or No? 
 - [ ] TODO: make Max's llama code actor compliant
 - [ ] TODO: port over Max's llama actor
 - [ ] TODO: figure out pre-prompts and style
 - [ ] TODO: find limitations of Context Window
 
-## HTML actor
+## UI actor
 - [ ] Figure out inteface layout, and learn Tauri
+- [ ] Tauri or QT application
 - [ ] how to integrate LLM into Tauri window
 
 ## Stretch Goals && Misc 

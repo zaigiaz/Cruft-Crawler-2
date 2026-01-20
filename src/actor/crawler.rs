@@ -18,6 +18,7 @@ use hex;
 // TODO: implement file cruft_utils.rs for get_file_hash and other non actor utilities to reside in
 
 // Internal state that helps return back to last crawled entry
+// TODO: think about how this should work: fields, etc.
 pub(crate) struct CrawlerState {
     pub(crate) abs_path:  PathBuf,
     pub(crate) hash:      String,    
@@ -99,13 +100,15 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<Fi
     while actor.is_running(|| crawler_tx.mark_closed()) {
 
 	for m in &metas {
-	actor.wait_vacant(&mut crawler_tx, 1).await; 
+	actor.wait_vacant(&mut crawler_tx, 1).await;
 	let message = m.clone();
 	actor.try_send(&mut crawler_tx, message).expect("couldn't send to DB");
 	}
 
+	// TODO: change this when we make this background process
 	actor.request_shutdown().await
     }
+
 	return Ok(());
 }
 

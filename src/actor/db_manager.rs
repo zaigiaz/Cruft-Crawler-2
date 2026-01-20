@@ -40,7 +40,6 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A,
 
 
 // add db entry given key and value pair
-// TODO: add match to check if db operations are successful or not
 fn db_add(key: i32, value: FileMeta, db: &sled::Db) -> Result<(), Box<dyn Error>> {
 
     // serialise struct into u8
@@ -50,6 +49,7 @@ fn db_add(key: i32, value: FileMeta, db: &sled::Db) -> Result<(), Box<dyn Error>
     let key_s = key.to_be_bytes();
 
     // insert into db
+    // TODO: add match to check if db operations are successful or not
     let _ = db.insert(key_s, value_s)?;
 
 Ok(())
@@ -57,10 +57,11 @@ Ok(())
 
 
 // edit db entry given key
-// TODO: add match to check if db operations are successful or not
 fn db_edit(key: i32, value: FileMeta, db: &sled::Db) -> Result<(), Box<dyn Error>> {
 
     // sled has immutable db, so we need to delete old key then insert new
+
+    // TODO: add match to check if db operations are successful or not
     let _ = db_remove(key, &db);
     let _ = db_add(key, value, &db);
 
@@ -69,12 +70,12 @@ Ok(())
 
 
 // remove db entry given key
-// TODO: add match to check if db operations are successful or not
 fn db_remove(key: i32, db: &sled::Db) -> Result<(), Box<dyn Error>> {
 
     let key_s = key.to_be_bytes();
     
-    // remove entry based on key
+
+    // TODO: add match to check if db operations are successful or not
     let _ = db.remove(key_s);
 
     Ok(())
