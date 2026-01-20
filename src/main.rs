@@ -21,7 +21,6 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     graph.start();  
 
-    // note: need to use Duration Crate to countdown seconds, rust will not take other data-types
     graph.block_until_stopped(Duration::from_secs(1)) 
 }
 
@@ -32,7 +31,7 @@ fn build_graph(graph: &mut Graph) {
 
     // build channels and configure colors on graph if they fill up too much
     let channel_builder = graph.channel_builder()
-        .with_filled_trigger(Trigger::AvgAbove(Filled::p90()), AlertColor::Red) //#!#//
+        .with_filled_trigger(Trigger::AvgAbove(Filled::p90()), AlertColor::Red) 
         .with_filled_trigger(Trigger::AvgAbove(Filled::p60()), AlertColor::Orange)
         .with_filled_percentile(Percentile::p80());
 
@@ -45,8 +44,9 @@ fn build_graph(graph: &mut Graph) {
         .with_mcpu_avg();
 
     // sender actor
+    let state = new_state();
     actor_builder.with_name(NAME_CRAWLER)
-        .build(move |actor| actor::crawler::run(actor, crawler_tx.clone()) 
+        .build(move |actor| actor::crawler::run(actor, crawler_tx.clone(), state.clone()) 
                , SoloAct);
 
     // receiver actor

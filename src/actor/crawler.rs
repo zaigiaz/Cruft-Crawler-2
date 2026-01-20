@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 use steady_state::*;
 
 use std::path::{Path, PathBuf};
@@ -7,13 +9,19 @@ use walkdir::WalkDir;
 use std::ffi::OsStr;
 use filetime::FileTime;
 use std::error::Error;
-// use std::env;
 use serde::{Serialize, Deserialize};
 use hex;
 
-// TODO: implement state
+// TODO: change state within visit_dir()
+// TODO: implement fallback logic
 // TODO: implement file cruft_utils.rs for get_file_hash and other non actor utilities to reside in
+// TODO: cleanup crate names
 
+// Internal state that helps return back to last crawled entry
+pub(crate) struct CrawlerState {
+    pub(crate) abs_path:  PathBuf,
+    pub(crate) hash:      String,    
+}
 
 // derived fn that allow cloning and printing
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -29,9 +37,9 @@ pub(crate) struct FileMeta {
     pub readonly:  bool,
 } 
 
-// for easy debugging of struct if needed
-impl FileMeta {
 
+impl FileMeta {
+// for easy debugging of struct if needed
    pub fn meta_print(&self) {
 	println!("Printing Metadata Object -----------");
 	println!("Absolute_Path: {:?}", self.abs_path);
@@ -51,42 +59,48 @@ impl FileMeta {
 	Ok(serde_cbor::to_vec(self)?)
     }
 
-    // deserialize from bytes
+    // deserialize from bytes using bincode
     pub fn from_bytes(bytes: &[u8]) -> Result<Self, Box<dyn Error>> {
 	Ok(serde_cbor::from_slice(bytes)?)
     }
 }
 
-// run function 
-pub async fn run(actor: SteadyActorShadow,
-                 crawler_tx: SteadyTx<FileMeta>) -> Result<(),Box<dyn Error>> {
 
-    internal_behavior(actor.into_spotlight([], [&crawler_tx]), crawler_tx).await
+// run function 
+pub async fn run(actor: SteadyActorShadow, crawler_tx: SteadyTx<FileMeta>,
+                 state: SteadyState<CrawlerState>) -> Result<(),Box<dyn Error>> {
+
+    let actor = actor.into_spotlight([], [&crawler_tx]);
+
+	if actor.use_internal_behavior {
+	    internal_behavior(actor, crawler_tx, state).await
+	} else {
+	    actor.simulated_behavior(vec!(&crawler_tx)).await
+	}
 }
 
 
 // Internal behaviour for the actor
-async fn internal_behavior<A: SteadyActor>(mut actor: A,
-					   crawler_tx: SteadyTx<FileMeta> ) -> Result<(),Box<dyn Error>> {
+async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<FileMeta>,
+                                           state: SteadyState<CrawlerState>) -> Result<(),Box<dyn Error>> {
+
+    // lock state
+    let mut state = state.lock(|| CrawlerState{abs_path: PathBuf::new(),
+					       hash: String::new()}).await;
 
     let mut crawler_tx = crawler_tx.lock().await;
 
-    // TODO: make this code work correctly with rel_path, and figure out where to start processing directories
-    // returns pathbuf, from current directory of process being run
-    // let curr_env: PathBuf = env::current_dir()?;
-    // let env_path: &Path = curr_env.as_path();
+    let path1 = Path::new("./src/test_directory/");
 
-    let path1 = Path::new("crawl_test/");
-
-    // convert pathbuf to path
-
+    // array of metadata structs
+    // TODO: change value of state inside this function before pushing metadata
+    // TODO: might need Box<SteadyState<CrawlerState>>::new() to do this correctly?
     let metas: Vec<FileMeta> = visit_dir(path1)?;
-
+    
     while actor.is_running(|| crawler_tx.mark_closed()) {
 
 	for m in &metas {
 	actor.wait_vacant(&mut crawler_tx, 1).await; 
-
 	let message = m.clone();
 	actor.try_send(&mut crawler_tx, message).expect("couldn't send to DB");
 	}
@@ -97,11 +111,8 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A,
 }
 
 
-
 // Read first 1024 bytes of file then hash, note that this hashes the bytes, not a string from the file
-// although we could import another package and hex.encode() to convert
-// note that I am only 70% confident in this function, apparently it doesnt always read 1024 bytes exactly?
-// research more
+// TODO: double check that hashing bytes is correct
 pub fn get_file_hash(file_name: PathBuf) -> Result<String, Box<dyn Error>> {
 
     let mut file = std::fs::File::open(file_name)?;
@@ -126,7 +137,7 @@ pub fn get_file_hash(file_name: PathBuf) -> Result<String, Box<dyn Error>> {
 
 
 // function to visit test directory and return metadata of each file and insert into metadata struct
-// then send to the db_manager actor (although this doesnt occur in this function)
+// also updates state per every entry
 pub fn visit_dir(dir: &Path) -> Result<Vec<FileMeta>, Box<dyn Error>> {
     let mut metas: Vec<FileMeta> = Vec::new();
 
@@ -174,10 +185,10 @@ pub fn visit_dir(dir: &Path) -> Result<Vec<FileMeta>, Box<dyn Error>> {
                 });
             }
             Err(e) => {
+		// TODO: log errors here
                 eprintln!("warning: cannot stat {}: {}", file_name, e);
             }
         }
     }
     Ok(metas)
 }
-

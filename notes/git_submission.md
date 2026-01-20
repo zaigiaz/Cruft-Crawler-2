@@ -5,7 +5,7 @@ This writes the full commit history (including full messages) from main into git
 
 # Step 4: Create main.tgz with Project Files and git-log.txt
 From the root of your repository:
-$ git archive --format=tar.gz -o "../$(basename "$PWD")-main.tgz" --prefix="$
+$ git archive --format=tar.gz -o "./$(basename "$PWD")-main.tgz" --prefix="$
 (basename "$PWD")/" main
 This creates a gzip-compressed tar file in the parent directory with “-main.tgz” as the filename suffix.
 This archive includes:

@@ -1,3 +1,6 @@
+[lints.rust]
+unused_imports = "allow"
+
 [package]
 name = "cruft-crawler"
 version = "0.0.2"
