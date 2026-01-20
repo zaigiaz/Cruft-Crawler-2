@@ -9,12 +9,13 @@ use walkdir::WalkDir;
 use std::ffi::OsStr;
 use filetime::FileTime;
 use std::error::Error;
-// use std::env;
 use serde::{Serialize, Deserialize};
 use hex;
 
-// TODO: implement state
+// TODO: change state within visit_dir()
+// TODO: implement fallback logic
 // TODO: implement file cruft_utils.rs for get_file_hash and other non actor utilities to reside in
+// TODO: cleanup crate names
 
 // Internal state that helps return back to last crawled entry
 pub(crate) struct CrawlerState {
@@ -83,23 +84,23 @@ pub async fn run(actor: SteadyActorShadow, crawler_tx: SteadyTx<FileMeta>,
 async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<FileMeta>,
                                            state: SteadyState<CrawlerState>) -> Result<(),Box<dyn Error>> {
 
-    let mut crawler_tx = crawler_tx.lock().await;
+    // lock state
+    let mut state = state.lock(|| CrawlerState{abs_path: PathBuf::new(),
+					       hash: String::new()}).await;
 
-    // TODO: make this code work correctly with rel_path, and figure out where to start processing directories
-    // returns pathbuf, from current directory of process being run
-    // let curr_env: PathBuf = env::current_dir()?;
-    // let env_path: &Path = curr_env.as_path();
+    let mut crawler_tx = crawler_tx.lock().await;
 
     let path1 = Path::new("./src/test_directory/");
 
     // array of metadata structs
+    // TODO: change value of state inside this function before pushing metadata
+    // TODO: might need Box<SteadyState<CrawlerState>>::new() to do this correctly?
     let metas: Vec<FileMeta> = visit_dir(path1)?;
     
     while actor.is_running(|| crawler_tx.mark_closed()) {
 
 	for m in &metas {
 	actor.wait_vacant(&mut crawler_tx, 1).await; 
-
 	let message = m.clone();
 	actor.try_send(&mut crawler_tx, message).expect("couldn't send to DB");
 	}
@@ -111,9 +112,7 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<Fi
 
 
 // Read first 1024 bytes of file then hash, note that this hashes the bytes, not a string from the file
-// although we could import another package and hex.encode() to convert
-// note that I am only 70% confident in this function, apparently it doesnt always read 1024 bytes exactly?
-// research more
+// TODO: double check that hashing bytes is correct
 pub fn get_file_hash(file_name: PathBuf) -> Result<String, Box<dyn Error>> {
 
     let mut file = std::fs::File::open(file_name)?;
@@ -138,7 +137,7 @@ pub fn get_file_hash(file_name: PathBuf) -> Result<String, Box<dyn Error>> {
 
 
 // function to visit test directory and return metadata of each file and insert into metadata struct
-// then send to the db_manager actor (although this doesnt occur in this function)
+// also updates state per every entry
 pub fn visit_dir(dir: &Path) -> Result<Vec<FileMeta>, Box<dyn Error>> {
     let mut metas: Vec<FileMeta> = Vec::new();
 
@@ -186,6 +185,7 @@ pub fn visit_dir(dir: &Path) -> Result<Vec<FileMeta>, Box<dyn Error>> {
                 });
             }
             Err(e) => {
+		// TODO: log errors here
                 eprintln!("warning: cannot stat {}: {}", file_name, e);
             }
         }
