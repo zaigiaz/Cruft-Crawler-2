@@ -15,16 +15,15 @@ use hex;
 // TODO: change state within visit_dir()
 // TODO: implement fallback logic
 // TODO: cleanup crate names
-// TODO: implement file cruft_utils.rs for get_file_hash and other non actor utilities to reside in
 
-// Internal state that helps return back to last crawled entry
+
 // TODO: think about how this should work: fields, etc.
 pub(crate) struct CrawlerState {
     pub(crate) abs_path:  PathBuf,
     pub(crate) hash:      String,    
 }
 
-// derived fn that allow cloning and printing
+// metadata struct
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub(crate) struct FileMeta {
     pub rel_path:  PathBuf,
@@ -105,7 +104,7 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<Fi
 	actor.try_send(&mut crawler_tx, message).expect("couldn't send to DB");
 	}
 
-	// TODO: change this when we make this background process
+	// TODO: change this when we make this background process (2 weeks)
 	actor.request_shutdown().await
     }
 
@@ -131,7 +130,7 @@ pub fn get_file_hash(file_name: PathBuf) -> Result<String, Box<dyn Error>> {
     let mut out: [u8; 32] = result.into();
     out.copy_from_slice(&result);
 
-    //encodes value as string
+    // encodes value as string
     let convert = hex::encode(out);
     
     Ok(convert)
