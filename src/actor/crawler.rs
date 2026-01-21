@@ -105,7 +105,7 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<Fi
 	}
 
 	// TODO: change this when we make this background process (2 weeks)
-	actor.request_shutdown().await
+	actor.request_shutdown().await;
     }
 
 	return Ok(());
