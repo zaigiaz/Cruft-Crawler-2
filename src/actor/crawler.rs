@@ -16,12 +16,16 @@ use hex;
 // TODO: implement fallback logic
 // TODO: cleanup crate names
 
+// TODO: how to compare every item in db to figure out if files are dupes
+// TODO: add parent field for duplicate comparison
+// TODO: have hash be the key for the dbp
 
 // TODO: think about how this should work: fields, etc.
 pub(crate) struct CrawlerState {
     pub(crate) abs_path:  PathBuf,
     pub(crate) hash:      String,    
 }
+
 
 // metadata struct
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -37,6 +41,11 @@ pub(crate) struct FileMeta {
     pub readonly:  bool,
 } 
 
+// TODO: think about how we will calculate stats to give to model
+pub(crate) struct file_stats {
+    pub  is_dupe:   bool,
+    pub  time:      i32,    
+}
 
 impl FileMeta {
 // for easy debugging of struct if needed
