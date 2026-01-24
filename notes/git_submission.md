@@ -13,3 +13,9 @@ This archive includes:
 • The git-log.txt file created in Step 3
 • No .git/ directory or Git metadata
 
+
+
+
+
+
+
