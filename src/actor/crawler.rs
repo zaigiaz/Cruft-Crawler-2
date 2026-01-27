@@ -1,4 +1,5 @@
 #![allow(unused)]
+#![allow(non_camel_case_types)]
 
 use steady_state::*;
 
@@ -12,13 +13,11 @@ use std::error::Error;
 use serde::{Serialize, Deserialize};
 use hex;
 
-// TODO: change state within visit_dir()
 // TODO: implement fallback logic
 // TODO: cleanup crate names
 
 // TODO: how to compare every item in db to figure out if files are dupes
-// TODO: add parent field for duplicate comparison
-// TODO: have hash be the key for the dbp
+// TODO: have hash be the key for the db
 
 // TODO: think about how this should work: fields, etc.
 pub(crate) struct CrawlerState {
@@ -43,8 +42,12 @@ pub(crate) struct FileMeta {
 
 // TODO: think about how we will calculate stats to give to model
 pub(crate) struct file_stats {
-    pub  is_dupe:   bool,
-    pub  time:      i32,    
+    pub  is_dupe:           bool,
+    pub  time_elapsed:      i32,    
+    pub  last_access:       i32,
+    pub  size:              i32,
+    pub  readonly:          bool,
+    pub  is_file:           bool,
 }
 
 impl FileMeta {
@@ -103,7 +106,7 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<Fi
 
     // TODO: change value of state inside this function before pushing metadata
     // NOTE: state passed in as mutable reference  &StateGuard<'_, CrawlerState>
-    let metas: Vec<FileMeta> = visit_dir(path1, &state)?;
+    let metas: Vec<FileMeta> = visit_dir(path1, &mut state)?;
     
     while actor.is_running(|| crawler_tx.mark_closed()) {
 
@@ -149,7 +152,7 @@ pub fn get_file_hash(file_name: PathBuf) -> Result<String, Box<dyn Error>> {
 // function to visit test directory and return metadata of each file and insert into metadata struct
 // also updates state per every entry
 pub fn visit_dir(dir: &Path,
-                 state: &StateGuard<'_, CrawlerState> ) -> Result<Vec<FileMeta>, Box<dyn Error>> {
+                 state: &mut StateGuard<'_, CrawlerState> ) -> Result<Vec<FileMeta>, Box<dyn Error>> {
 
     let mut metas: Vec<FileMeta> = Vec::new();
 
@@ -158,6 +161,7 @@ pub fn visit_dir(dir: &Path,
         let entry = entry_res?;
         let rel_path: &Path = entry.path();
 	let abs_path: PathBuf = std::path::absolute(&rel_path)?;
+	state.abs_path = abs_path.clone();
 
 	// convert relative path to Pathbuf for printing
 	let rel_path: PathBuf = rel_path.to_path_buf();
@@ -182,6 +186,7 @@ pub fn visit_dir(dir: &Path,
 
 		if is_file {
 		hash = get_file_hash(abs_path.clone()).expect("didn't get hash value");
+		state.hash = hash.clone()
 		}
 
                 metas.push(FileMeta {

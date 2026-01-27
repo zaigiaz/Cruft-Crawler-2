@@ -6,33 +6,26 @@ It uses a local quantized LLM to help recommend safe deletions, and delivers a c
 
 ## main functionality
 - [ ] TODO: parse config file to get settings data
-- [ ] TODO: cpu scheduling with LLM
+- [ ] TODO: python script to evaluate models
 
 ## crawler actor
 - [ ] TODO: Batching and Time-Based sending of Data
 - [ ] TODO: write function to compare hashes and then add that change to 'is_dupe' flag
 
 ## db_manager actor
-- [ ] TODO: Make Function for Write-Ahead Log
 - [ ] TODO: use sled_view to see database
 - [ ] TODO: create DB schema for Sled
 
 ## LLM actor
-- [ ] TODO: Linear Regression Model or No? 
-- [ ] TODO: make Max's llama code actor compliant
-- [ ] TODO: port over Max's llama actor
-- [ ] TODO: figure out pre-prompts and style
+- [ ] TODO: try and make Max's llama code actor compliant
+- [ ] TODO: tokenization method exploration
+- [ ] TODO: Device, Memory Mapping
+- [ ] TODO: pre-prompts and style, trying out different methods
 - [ ] TODO: find limitations of Context Window
-
-## UI actor
-- [ ] Figure out inteface layout, and learn Tauri
-- [ ] Tauri or QT application
-- [ ] how to integrate LLM into Tauri window
 
 ## Stretch Goals && Misc 
 - [ ] <5% CPU usage
 - [ ] implement niceness and priority scheduling
-- [ ] set config file usage
 - [ ] screensaver API (X11 or Win32 api)
 
 ## Crates needed

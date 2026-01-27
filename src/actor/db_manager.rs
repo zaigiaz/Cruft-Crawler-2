@@ -1,4 +1,5 @@
 #![allow(unused)]
+#![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 
 use steady_state::*;
@@ -11,6 +12,11 @@ use sled::{Batch, open};
 
 // TODO: Database schema
 // TODO: actor shutdown?
+
+struct db_state {
+    db_id: i32,
+    // more fields here
+}
 
 // size of batch we want (# of FileMeta Structs before writing to DB)
 const BATCH_SIZE: usize = 2;
@@ -38,24 +44,28 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A,
 
     while actor.is_running(|| crawler_rx.is_closed_and_empty()) {
 
+
+
 	let mut batch = Batch::default();
+	let unit_cnt  = actor.avail_units(&mut crawler_rx);
+	println!("here is {}", unit_cnt);
+
+	// TODO: might need to use this for timer-out operations
+	// steady_await_for_all_or_proceed_upon_two()
 	actor.wait_avail(&mut crawler_rx, BATCH_SIZE).await;
 
-
-	// TODO: add functionality to write to write-ahead log
-	// TODO: add timer-based operations to db
 
 	// convert batch_size constant to i32 to work	
 	while loop_ctr < BATCH_SIZE as i32 { 
 	let recieved = actor.try_take(&mut crawler_rx);
-	let msg = recieved.expect("expected FileMeta Struct (db_actor)");
+	let msg = recieved.expect("expected FileMeta Struct (crawler -> db_actor)");
 
 	loop_ctr += 1;
-	db_id += 1;
+	db_id    += 1;
 
 	write_ahead("./data/write_ahead_log.txt", db_id, msg.clone());
 	let _add = db_add(db_id, &msg, &mut batch);
-	msg.meta_print();
+	// msg.meta_print();
 	}
 
 	// apply batch to db
