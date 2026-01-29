@@ -1,5 +1,6 @@
 #![allow(unused)]
 #![allow(non_camel_case_types)]
+#![allow(non_snake_case)]
 
 use steady_state::*;
 
@@ -42,10 +43,11 @@ pub(crate) struct FileMeta {
 
 // TODO: think about how we will calculate stats to give to model
 pub(crate) struct file_stats {
+    pub  hash:              String,
     pub  is_dupe:           bool,
-    pub  time_elapsed:      i32,    
+    pub  time_elapsed:      i64,    
     pub  last_access:       i32,
-    pub  size:              i32,
+    pub  size:              u64,
     pub  readonly:          bool,
     pub  is_file:           bool,
 }
@@ -209,3 +211,18 @@ pub fn visit_dir(dir: &Path,
     }
     Ok(metas)
 }
+
+
+fn compute_file_stats(fstat: &mut file_stats, Meta: &FileMeta) -> Result<(), Box<dyn Error>> {
+
+    fstat.time_elapsed = Meta.modified - Meta.created;
+    fstat.hash = Meta.hash.clone();
+    fstat.readonly = Meta.readonly;
+    fstat.is_file  = Meta.is_file;
+    fstat.size  = Meta.size;
+
+    println!("hello");
+
+    Ok(())
+}
+
