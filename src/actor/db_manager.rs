@@ -44,11 +44,10 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A,
 
     while actor.is_running(|| crawler_rx.is_closed_and_empty()) {
 
-
-
 	let mut batch = Batch::default();
 	let unit_cnt  = actor.avail_units(&mut crawler_rx);
-	println!("here is {}", unit_cnt);
+	// println!("here is {}", unit_cnt);
+
 
 	// TODO: might need to use this for timer-out operations
 	// steady_await_for_all_or_proceed_upon_two()
@@ -65,7 +64,7 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A,
 
 	write_ahead("./data/write_ahead_log.txt", db_id, msg.clone());
 	let _add = db_add(db_id, &msg, &mut batch);
-	// msg.meta_print();
+	msg.meta_print();
 	}
 
 	// apply batch to db

@@ -14,7 +14,8 @@ use std::error::Error;
 use serde::{Serialize, Deserialize};
 use hex;
 
-// TODO: implement fallback logic
+// TODO: skip hidden directories or files?
+// TODO: implement fallback logic (write-ahead log or total actor failure)
 // TODO: cleanup crate names
 
 // TODO: how to compare every item in db to figure out if files are dupes
@@ -55,7 +56,7 @@ pub(crate) struct file_stats {
 impl FileMeta {
 // for easy debugging of struct if needed
    pub fn meta_print(&self) {
-	println!("Printing Metadata Object -----------");
+        println!("\n--------------------");
 	println!("Absolute_Path: {:?}", self.abs_path);
 	println!("Relative_Path: {:?}", self.rel_path);
 	println!("File_Name: {}",       self.file_name);
@@ -65,7 +66,7 @@ impl FileMeta {
 	println!("modified: {}",        self.modified / 60);
 	println!("created: {}",         self.created / 60);
 	println!("read-only: {}",       self.readonly);
-	println!("Printing Metadata Object -----------\n");
+        println!("--------------------");
     }
 
     // serialize into bytes using bincode
@@ -106,8 +107,6 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<Fi
 
     let path1 = Path::new("./src/test_directory/");
 
-    // TODO: change value of state inside this function before pushing metadata
-    // NOTE: state passed in as mutable reference  &StateGuard<'_, CrawlerState>
     let metas: Vec<FileMeta> = visit_dir(path1, &mut state)?;
     
     while actor.is_running(|| crawler_tx.mark_closed()) {
