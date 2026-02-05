@@ -29,7 +29,7 @@ pub(crate) struct CrawlerState {
 
 
 // metadata struct
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub(crate) struct FileMeta {
     pub rel_path:  PathBuf,
     pub abs_path:  PathBuf,
@@ -82,7 +82,7 @@ impl FileMeta {
 
 
 // run function 
-pub async fn run(actor: SteadyActorShadow, crawler_tx: SteadyTx<FileMeta>,
+pub async fn run(actor: SteadyActorShadow, crawler_tx: SteadyTx<FileMeta>, crawler_to_ai: SteadyTx<FileMeta>,
                  state: SteadyState<CrawlerState>) -> Result<(),Box<dyn Error>> {
 
     let actor = actor.into_spotlight([], [&crawler_tx]);

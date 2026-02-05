@@ -1,4 +1,5 @@
 #![allow(unused)]
+#![allow(deprecated)]
 
 use steady_state::*;
 
@@ -35,11 +36,12 @@ fn run_model()-> anyhow::Result<()>{
     
     // Set up model parameters
     let model_params = LlamaModelParams::default();
-    
+
     // TODO: change this to be relative to our actual project
-    let model_file_path  = "../models/smollm3-3b-q4_k_m.gguf";
-    let prompt_file_path = "../../data/model_data/prompt.txt";
-    
+    // TODO: idk how to fix
+    let model_file_path  = "/home/shayne/Programming/Cruft-Crawler-2/data/model_data/Llama-3.2-3B-Instruct-Q6_K_L.gguf";
+    let prompt_file_path = "/home/shayne/Programming/Cruft-Crawler-2/data/model_data/prompt.txt";
+
     // Load the model
     let model = LlamaModel::load_from_file(
 	&backend,
@@ -108,9 +110,9 @@ fn run_model()-> anyhow::Result<()>{
 	let mut file = fs::OpenOptions::new()
 	    .append(true)   // append mode
 	    .create(true)   // create if it doesn't exist
-	    .open("../../data/output.txt")
+	    .open("../../data/output.txt");
 	
-	writeln!(file, "{}", output_string)?;
+	writeln!(file?, "{}", output_string)?;
 
 	std::io::stdout().flush()?;
 
@@ -132,12 +134,12 @@ fn run_model()-> anyhow::Result<()>{
 async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_to_ai_model_rx: SteadyRx<FileMeta>) -> Result<(),Box<dyn Error>> {
 	
     let mut crawler_to_ai_model_rx = crawler_to_ai_model_rx.lock().await;
+   
+    // run our AI model that is in the model/ folder
+    run_model();
 	    
-    while actor.is_running(|| crawler_to_ai_model_rx.is_closed_and_empty() || ai_model_to_ui_tx.mark_closed()) {
+    while actor.is_running(|| crawler_to_ai_model_rx.is_closed_and_empty()) {
 		
-	// run our AI model that is in the model/ folder
-	run_model();
-
 	// Recieving data from crawler actor
 	actor.wait_avail(&mut crawler_to_ai_model_rx, 1).await;
         let recieved = actor.try_take(&mut crawler_to_ai_model_rx);

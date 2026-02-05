@@ -1,2 +1,2 @@
 here is my model and my string and please say hello back the the user,
-nothing else please. just say hello, one word.
+nothing else please. just say hello, one word. please and thank you.
