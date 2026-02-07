@@ -1,0 +1,224 @@
+* commit 589ca5e43ee77de2873ea9385d91fddff18eb8b0 (HEAD -> CPU_optimized_LLM, origin/CPU_optimized_LLM)
+| Author: maxlayn1 <maxlayn1@gmail.com>
+| Date:   Thu Feb 5 14:55:32 2026 -0600
+| 
+|     ran rust formatter to clean it up
+| 
+|  src/main.rs | 33 ++++++++++++++++-----------------
+|  1 file changed, 16 insertions(+), 17 deletions(-)
+| 
+* commit 22f776199f780f5dc529ba290dacec72201b96b1
+| Author: maxlayn1 <maxlayn1@gmail.com>
+| Date:   Thu Feb 5 14:54:05 2026 -0600
+| 
+|     context size is ACTUALLY 128 instead of 256 now
+| 
+|  src/main.rs | 6 +-----
+|  1 file changed, 1 insertion(+), 5 deletions(-)
+| 
+* commit 02a26ddb2baf75e5baf04c27e4023a65932cb2fc
+| Author: maxlayn1 <maxlayn1@gmail.com>
+| Date:   Thu Feb 5 14:51:14 2026 -0600
+| 
+|     so far the best trade off seems to be 1.25s chunk delay, 30s gen delay, and chunk size of 1. it keeps the sudden spikes at a minimum, and instead hovers at like 20% single core usage for the entire process duration
+| 
+|  src/main.rs | 8 ++++----
+|  1 file changed, 4 insertions(+), 4 deletions(-)
+| 
+* commit e0c02a4f353436f459d4764f98370fab80d80c9d
+| Author: maxlayn1 <maxlayn1@gmail.com>
+| Date:   Thu Feb 5 14:31:44 2026 -0600
+| 
+|     current theory is that keeping chunk size low reduces CPU spikes
+| 
+|  src/main.rs | 6 +++---
+|  1 file changed, 3 insertions(+), 3 deletions(-)
+| 
+* commit 2a4747f4b19f9fa4d8405a3ea9713cf38bc20c0c
+| Author: maxlayn1 <maxlayn1@gmail.com>
+| Date:   Thu Feb 5 14:14:06 2026 -0600
+| 
+|     added generation delay timer to reduce CPU load
+| 
+|  src/main.rs | 5 +++++
+|  1 file changed, 5 insertions(+)
+| 
+* commit 1140fbb5609e03a77db394416e5fcab22869f3f1
+| Author: maxlayn1 <maxlayn1@gmail.com>
+| Date:   Thu Feb 5 14:12:09 2026 -0600
+| 
+|     swapped to most minimal possible sampler for less CPU load
+| 
+|  src/main.rs | 15 ++++++---------
+|  1 file changed, 6 insertions(+), 9 deletions(-)
+| 
+* commit f63a8b4e748f8d763ec9a9530742c840076f088f
+| Author: maxlayn1 <maxlayn1@gmail.com>
+| Date:   Thu Feb 5 14:09:12 2026 -0600
+| 
+|     reduced max token size from 100 to 20 for more performance
+| 
+|  src/main.rs | 7 +++----
+|  1 file changed, 3 insertions(+), 4 deletions(-)
+| 
+* commit 363e97b46674f003d7edb72fa1d76285659f9a81
+| Author: maxlayn1 <maxlayn1@gmail.com>
+| Date:   Thu Feb 5 14:05:27 2026 -0600
+| 
+|     reduced the context size to 128 from 256 to further save on CPU performance, should be no issue.
+| 
+|  src/main.rs | 2 +-
+|  1 file changed, 1 insertion(+), 1 deletion(-)
+| 
+* commit b1809e9004ff68e1a0e2ebb0964439d334e7666a
+| Author: maxlayn1 <maxlayn1@gmail.com>
+| Date:   Thu Feb 5 13:55:51 2026 -0600
+| 
+|     10 second sleep timer on feeding token input plus fully NICEd process seems good
+| 
+|  src/main.rs | 4 ++--
+|  1 file changed, 2 insertions(+), 2 deletions(-)
+| 
+* commit b7d9bc2d837f89edcfbe82e06e08cea0bb8f1b0e
+| Author: maxlayn1 <maxlayn1@gmail.com>
+| Date:   Wed Feb 4 13:31:53 2026 -0600
+| 
+|     commented out the code to set the process to lowest NICE priority on OS, doesnt seem to do anything for performance, so ill leave it off for now
+| 
+|  src/main.rs | 7 ++++++-
+|  1 file changed, 6 insertions(+), 1 deletion(-)
+| 
+* commit 59b47ff6bdb099f9340274bdbd0d7d5cebf72009
+| Author: maxlayn1 <maxlayn1@gmail.com>
+| Date:   Tue Feb 3 15:05:05 2026 -0600
+| 
+|     LLM successfully KEEPing passwd file when following Jace's prompt format. There is hope?
+| 
+|  src/main.rs | 7 +++----
+|  1 file changed, 3 insertions(+), 4 deletions(-)
+| 
+* commit 0d4c933d3a4710755e59f54205b247bfedf2d333
+| Author: maxlayn1 <maxlayn1@gmail.com>
+| Date:   Tue Feb 3 14:54:02 2026 -0600
+| 
+|     swapped to q8 version of the model and it seems to be performing better than the q4 model in every way
+| 
+|  src/main.rs | 13 +++++++++++--
+|  1 file changed, 11 insertions(+), 2 deletions(-)
+| 
+* commit da079550c137b196a623612ad3bd7193b12da99c
+| Author: maxlayn1 <maxlayn1@gmail.com>
+| Date:   Tue Feb 3 14:27:17 2026 -0600
+| 
+|     changed sleep timer between feeding tokens to 10 seconds, noticable performance increase
+| 
+|  src/main.rs | 2 +-
+|  1 file changed, 1 insertion(+), 1 deletion(-)
+| 
+* commit 170532db6071c1ddefdc0953942a59802c634e67
+| Author: maxlayn1 <maxlayn1@gmail.com>
+| Date:   Tue Feb 3 14:26:31 2026 -0600
+| 
+|     added libc crate and code at beginning of main to pin the process to core 0
+| 
+|  Cargo.lock  |  1 +
+|  Cargo.toml  |  1 +
+|  src/main.rs | 15 +++++++++++++++
+|  3 files changed, 17 insertions(+)
+| 
+* commit 4587f4ba0d5c5a349c73d854da4aa636324fc416
+| Author: maxlayn1 <maxlayn1@gmail.com>
+| Date:   Mon Feb 2 18:52:25 2026 -0600
+| 
+|     FINALLY tokenizing and slowing feeding tokens to LLM for better performance worksgit add .
+| 
+|  src/main.rs | 77 ++++++++++++++++++++++++++++++++++++++++-------------------
+|  1 file changed, 52 insertions(+), 25 deletions(-)
+| 
+* commit c6fb01e1abcdc0ddeea9884249094fb84ff7e56b
+| Author: maxlayn1 <maxlayn1@gmail.com>
+| Date:   Sun Feb 1 17:52:53 2026 -0600
+| 
+|     reduced batch size for more performance
+| 
+|  src/main.rs | 2 +-
+|  1 file changed, 1 insertion(+), 1 deletion(-)
+| 
+* commit 6397ba4f201010f581944f69032a56e8d03db0d7
+| Author: maxlayn1 <maxlayn1@gmail.com>
+| Date:   Sun Feb 1 17:49:31 2026 -0600
+| 
+|     limited to using a single CPU core i think, but still spikes that core to 100% usage
+| 
+|  src/main.rs | 4 +++-
+|  1 file changed, 3 insertions(+), 1 deletion(-)
+| 
+* commit 787dde83864ae4f7c59f6d96f9c04f6b7cb378d6
+| Author: maxlayn1 <maxlayn1@gmail.com>
+| Date:   Thu Jan 29 14:49:47 2026 -0600
+| 
+|     Reduced context size to 256 tokens
+| 
+|  src/main.rs | 4 ++--
+|  1 file changed, 2 insertions(+), 2 deletions(-)
+| 
+* commit 6232d5534822a3d5647d869b4a857275fc21af3e
+| Author: maxlayn1 <maxlayn1@gmail.com>
+| Date:   Thu Jan 29 14:35:28 2026 -0600
+| 
+|     Changed prompt to a binary question similar to goal prompt of asking KEEP or DELETE.
+| 
+|  src/main.rs | 2 +-
+|  1 file changed, 1 insertion(+), 1 deletion(-)
+| 
+* commit 3cc27ef63ff9baa7f3a10ecc68cb254dfd37cfe6
+| Author: maxlayn1 <maxlayn1@gmail.com>
+| Date:   Thu Jan 29 14:29:42 2026 -0600
+| 
+|     Got a prompt that gets the LLM to successfully output only a single word to test CPU usage. Although a shorter spike, still hit 107% CPU usage. (???)
+| 
+|  src/main.rs | 2 +-
+|  1 file changed, 1 insertion(+), 1 deletion(-)
+| 
+* commit 7bf4142b510afd7c51730d8858f886aacc0909d7
+| Author: maxlayn1 <maxlayn1@gmail.com>
+| Date:   Thu Jan 29 14:14:37 2026 -0600
+| 
+|     created new branch to try to optimize LLM CPU usage on
+| 
+|  git-log.txt | 32 ++++++++++++++++++++++++++++++++
+|  src/main.rs |  2 +-
+|  2 files changed, 33 insertions(+), 1 deletion(-)
+| 
+* commit b4e873af3c40ce3bd710071794303073bd38e52b
+| Author: maxlayn1 <maxlayn1@gmail.com>
+| Date:   Sun Nov 9 23:46:47 2025 -0600
+| 
+|     working example to query a local llm using llama-cpp-2 crate bindings, takes a while to build, and models likely to tweak
+| 
+|  Cargo.lock  | 402 +++++++++++++++++-----------------------------------------
+|  Cargo.toml  |   4 +-
+|  src/main.rs |  98 +++++++++++++-
+|  3 files changed, 212 insertions(+), 292 deletions(-)
+| 
+* commit ba5092a206bff30759db8a216093d55312393867
+| Author: maxlayn1 <maxlayn1@gmail.com>
+| Date:   Sun Nov 9 22:34:11 2025 -0600
+| 
+|     added steady_state dependency
+| 
+|  Cargo.lock | 1066 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++--
+|  Cargo.toml |    1 +
+|  2 files changed, 1032 insertions(+), 35 deletions(-)
+| 
+* commit 1a04ef2b88f03cb2fb6e39f4c75c92512af8f18f
+  Author: maxlayn1 <maxlayn1@gmail.com>
+  Date:   Sun Nov 9 22:20:42 2025 -0600
+  
+      Recreate prototype from scratch with llama_cpp added
+  
+   .gitignore  |  17 ++
+   Cargo.lock  | 695 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+   Cargo.toml  |   7 +
+   src/main.rs |   3 +
+   4 files changed, 722 insertions(+)

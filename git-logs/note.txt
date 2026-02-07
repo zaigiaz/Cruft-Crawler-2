@@ -1,5 +1,3 @@
-I worked on DB operations like batching and basic functionality for a write-ahead log
-Jace worked on the scaffolding boiler-plate for the rest of the actors
-Max continues to work on LLM with LlamaCPP, Rohit is now designing our UI/UX
+added different log files for all of our work on different branches
 
 - Shayne
