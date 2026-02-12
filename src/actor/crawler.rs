@@ -14,7 +14,7 @@ use std::error::Error;
 use serde::{Serialize, Deserialize};
 use hex;
 
-// TODO: skip hidden directories or files?
+// TODO: skip hidden dierctories or files?
 // TODO: implement fallback logic (write-ahead log or total actor failure)
 // TODO: cleanup crate names
 
@@ -43,8 +43,10 @@ pub(crate) struct FileMeta {
 } 
 
 // TODO: think about how we will calculate stats to give to model
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub(crate) struct file_stats {
     pub  hash:              String,
+    pub  abs_path:          PathBuf,
     pub  is_dupe:           bool,
     pub  time_elapsed:      i64,    
     pub  last_access:       i32,
@@ -82,7 +84,7 @@ impl FileMeta {
 
 
 // run function 
-pub async fn run(actor: SteadyActorShadow, crawler_tx: SteadyTx<FileMeta>, crawler_to_ai: SteadyTx<FileMeta>,
+pub async fn run(actor: SteadyActorShadow, crawler_tx: SteadyTx<FileMeta>, 
                  state: SteadyState<CrawlerState>) -> Result<(),Box<dyn Error>> {
 
     let actor = actor.into_spotlight([], [&crawler_tx]);
@@ -108,13 +110,19 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<Fi
     let path1 = Path::new("./src/test_directory/");
 
     let metas: Vec<FileMeta> = visit_dir(path1, &mut state)?;
+    let mut stat_vec: Vec<file_stats> = vec![];
     
     while actor.is_running(|| crawler_tx.mark_closed()) {
 
 	for m in &metas {
+	   	
 	actor.wait_vacant(&mut crawler_tx, 1).await;
 	let message = m.clone();
+
+	stat_vec.push(compute_file_stats(m));
+
 	actor.try_send(&mut crawler_tx, message).expect("couldn't send to DB");
+
 	}
 
 	// TODO: change this when we make this background process (2 weeks)
@@ -211,17 +219,28 @@ pub fn visit_dir(dir: &Path,
     Ok(metas)
 }
 
+fn compute_file_stats(Meta: &FileMeta) -> file_stats {
 
-fn compute_file_stats(fstat: &mut file_stats, Meta: &FileMeta) -> Result<(), Box<dyn Error>> {
+    let mut f_item = file_stats  {
+	hash:         String::from("").into(),
+	abs_path:     String::from("").into(),
+	is_dupe:      false,
+	time_elapsed: 0,
+	last_access:  0,
+	size:         0,
+	readonly:     false,
+	is_file:      false,
+    };
 
-    fstat.time_elapsed = Meta.modified - Meta.created;
-    fstat.hash = Meta.hash.clone();
-    fstat.readonly = Meta.readonly;
-    fstat.is_file  = Meta.is_file;
-    fstat.size  = Meta.size;
 
-    println!("hello");
+    f_item.time_elapsed  = Meta.modified - Meta.created;
+    f_item.abs_path      = Meta.abs_path.clone();
+    f_item.hash          = Meta.hash.clone();
+    f_item.readonly      = Meta.readonly;
+    f_item.is_file       = Meta.is_file;
+    f_item.size          = Meta.size;
 
-    Ok(())
+
+    f_item
 }
 

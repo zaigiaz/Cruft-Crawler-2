@@ -27,7 +27,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 const NAME_CRAWLER: &str = "CRAWLER";
 const NAME_DB: &str = "DB_MANAGER";
-const NAME_AI_MODEL: &str = "AI_MODEL";
+// const NAME_AI_MODEL: &str = "AI_MODEL";
 
 fn build_graph(graph: &mut Graph) {
 
@@ -39,7 +39,7 @@ fn build_graph(graph: &mut Graph) {
 
     // Build Channels for Sender and Reciever Tx and Rx for communication between actors
     let (crawler_tx, crawler_rx)                   = channel_builder.build();
-    let (crawler_ai_model_tx, crawler_ai_model_rx) = channel_builder.build();
+    // let (crawler_ai_model_tx, crawler_ai_model_rx) = channel_builder.build();
     
     // build actor interface
     let actor_builder = graph.actor_builder()
@@ -49,7 +49,7 @@ fn build_graph(graph: &mut Graph) {
     // crawler actor
     let state = new_state();
     actor_builder.with_name(NAME_CRAWLER)
-        .build(move |actor| actor::crawler::run(actor, crawler_tx.clone(), crawler_ai_model_tx.clone(), state.clone()) 
+        .build(move |actor| actor::crawler::run(actor, crawler_tx.clone(), state.clone()) 
                , SoloAct);
 
     // database actor
@@ -58,9 +58,9 @@ fn build_graph(graph: &mut Graph) {
                , SoloAct);
 
     // AI actor
-    actor_builder.with_name(NAME_AI_MODEL)
-        .build(move |actor | actor::ai_model::run(actor, crawler_ai_model_rx.clone())
-                , SoloAct); 
+    // actor_builder.with_name(NAME_AI_MODEL)
+    //     .build(move |actor | actor::ai_model::run(actor, crawler_ai_model_rx.clone())
+    //             , SoloAct); 
 
 }
 

@@ -13,6 +13,7 @@ use llama_cpp_2::sampling::LlamaSampler;
 use std::io::Write;
 use std::num::NonZeroU32;
 use std::{any, fs};
+use std::path::Path;
 
 use crate::actor::crawler::FileMeta;
 
@@ -31,16 +32,22 @@ pub async fn run(actor: SteadyActorShadow, crawler_to_model_rx: SteadyRx<FileMet
 // code to run our AI model through the Llama2 Crate
 fn run_model()-> anyhow::Result<()>{
 
+
     // Initialize the backend
     let backend = LlamaBackend::init()?;
-    
+        
     // Set up model parameters
-    let model_params = LlamaModelParams::default();
 
-    // TODO: change this to be relative to our actual project
-    // TODO: idk how to fix
-    let model_file_path  = "/home/shayne/Programming/Cruft-Crawler-2/data/model_data/Llama-3.2-3B-Instruct-Q6_K_L.gguf";
-    let prompt_file_path = "/home/shayne/Programming/Cruft-Crawler-2/data/model_data/prompt.txt";
+
+    // TODO: fix the cpu aysnc buffer issue when loading model params or backend
+    // TODO: see if you can enable mmap to reduce RAM usage
+
+    let model_params = LlamaModelParams::default();
+    model_params.use_mmap();
+
+    let model_file_path  = Path::new("/home/shayne/Programming/Cruft-Crawler-2/data/model_data/Generator3B-V0.3.Q4_K_M.gguf");
+    let prompt_file_path = Path::new("/home/shayne/Programming/Cruft-Crawler-2/data/model_data/prompt.txt");
+
 
     // Load the model
     let model = LlamaModel::load_from_file(
@@ -49,6 +56,7 @@ fn run_model()-> anyhow::Result<()>{
 	&model_params
     )?;
     
+
     // Create context with 2048 token context size
     let ctx_params = LlamaContextParams::default()
 	.with_n_ctx(Some(NonZeroU32::new(2048).unwrap()));
@@ -144,6 +152,7 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_to_ai_model_rx:
 	actor.wait_avail(&mut crawler_to_ai_model_rx, 1).await;
         let recieved = actor.try_take(&mut crawler_to_ai_model_rx);
 	let message = recieved.expect("Expected a string");			
+	println!("got a string");
     } 
 
 	return Ok(());
