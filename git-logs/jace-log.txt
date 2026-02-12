@@ -1,186 +1,123 @@
-* commit e404905baf685ac3a72989d22b769be1289df800 (HEAD -> main, origin/main, origin/HEAD)
-| Author: zaigiaz <shayne.tman@gmail.com>
-| Date:   Thu Feb 5 15:04:51 2026 -0600
+* commit e2b64462b68ed4c9f660d34fd874acfc7d26b858 (HEAD -> cruftcrawler_0.1, origin/cruftcrawler_0.1)
+| Author: jace ackerman <jaceackerman7@gmail.com>
+| Date:   Fri Jan 30 22:33:53 2026 -0600
 | 
-|     ai integration work
+|     added prompt file
 | 
-|  Cargo.lock                 | 183 ++++++++++++++++++++++++++++++++++++++++++-
-|  Cargo.toml                 |   3 +
-|  data/model_data/prompt.txt |   2 +-
-|  data/write_ahead_log.txt   | 104 ++++++++++++++++++++++++
-|  src/actor/ai_model.rs      |  22 +++---
-|  src/actor/crawler.rs       |   4 +-
-|  6 files changed, 301 insertions(+), 17 deletions(-)
+|  src/prompt.txt | 10 ++++++++++
+|  1 file changed, 10 insertions(+)
 | 
-* commit df37395f980d1f3be7441c4fe51865e13fb1d05b
-| Author: zaigiaz <shayne.tman@gmail.com>
-| Date:   Mon Feb 2 10:45:09 2026 -0600
+* commit f05d4ff0b710027d62946fcf432034b8bf26d847
+| Author: jace ackerman <jaceackerman7@gmail.com>
+| Date:   Fri Jan 30 22:32:51 2026 -0600
 | 
-|     started LLM integration from team's code
+|     updated main
 | 
-|  data/model_data/output.txt |   0
-|  data/model_data/prompt.txt |   2 +
-|  src/actor/ai_model.rs      | 148 +++++++++++++++++++++++++++++++++++++++++++
-|  src/main.rs                |  19 ++++--
-|  4 files changed, 163 insertions(+), 6 deletions(-)
+|  src/main.rs | 12 ++++++++----
+|  1 file changed, 8 insertions(+), 4 deletions(-)
 | 
-* commit 94ddd5e786b91ede5814e81c00a9417693ca6a55
-| Author: zaigiaz <shayne.tman@gmail.com>
-| Date:   Fri Jan 30 11:05:03 2026 -0600
+* commit 67e93f53325e4dbfdd1b2421da890a3d0af25c52
+| Author: jace ackerman <jaceackerman7@gmail.com>
+| Date:   Fri Jan 30 22:32:18 2026 -0600
 | 
-|     update local repo
+|     Updated ai_model. Now uses llm_engine
 | 
-|  config.toml             | 2 --
-|  src/actor/crawler.rs    | 9 ++++-----
-|  src/actor/db_manager.rs | 7 +++----
-|  3 files changed, 7 insertions(+), 11 deletions(-)
+|  src/actor/ai_model.rs | 32 ++++++++++++++++++++++++++++++--
+|  1 file changed, 30 insertions(+), 2 deletions(-)
 | 
-* commit 57b049133e456ba862a1b163cfb4a396f8b93e0f
-| Author: zaigiaz <shayne.tman@gmail.com>
-| Date:   Thu Jan 29 14:58:39 2026 -0600
+* commit 43eea093cceabfdaad3a35f89a6d57ce1024144a
+| Author: jace ackerman <jaceackerman7@gmail.com>
+| Date:   Fri Jan 30 22:31:16 2026 -0600
 | 
-|     added temp file_stats structure
+|     Added llm_engine. This interfaces with llama-cpp-2.
 | 
-|  data/write_ahead_log.txt | 24 ++++++++++++++++++++++++
-|  src/actor/crawler.rs     | 21 +++++++++++++++++++--
-|  2 files changed, 43 insertions(+), 2 deletions(-)
+|  src/llm_engine.rs | 109 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+|  1 file changed, 109 insertions(+)
 | 
-* commit 7e0f477ae6085452e37e4017c5ed37e673246f55
-| Author: zaigiaz <shayne.tman@gmail.com>
-| Date:   Tue Jan 27 14:40:13 2026 -0600
+* commit 256b2cb697e924b9d5785fcae6206236824bda8d
+| Author: jace ackerman <jaceackerman7@gmail.com>
+| Date:   Tue Jan 27 22:00:28 2026 -0600
 | 
-|     added crawler-state stuff, TODO list rework
+|     added database files
 | 
-|  README.md                | 17 +++------
-|  data/write_ahead_log.txt | 88 ++++++++++++++++++++++++++++++++++++++++++++++
-|  src/actor/crawler.rs     | 19 ++++++----
-|  src/actor/db_manager.rs  | 22 ++++++++----
-|  4 files changed, 121 insertions(+), 25 deletions(-)
+|  src/db/db                    | Bin 2621439 -> 2621439 bytes
+|  src/db/snap.0000000000CBEADB | Bin 113 -> 0 bytes
+|  2 files changed, 0 insertions(+), 0 deletions(-)
 | 
-* commit f85b26b0785c5343a8eb8e88e46da3873a79d28d
-| Author: zaigiaz <shayne.tman@gmail.com>
-| Date:   Fri Jan 23 22:50:31 2026 -0600
+* commit 1e513c74c7f7e24a6cb0bb3521698c138267ef04
+| Author: jace ackerman <jaceackerman7@gmail.com>
+| Date:   Fri Jan 23 18:49:38 2026 -0600
 | 
-|     git log, again, again
+|     Add git-log.txt for repo submission
 | 
-|  git-logs/jace_log.png | Bin 0 -> 54096 bytes
+|  git-log.txt | 0
 |  1 file changed, 0 insertions(+), 0 deletions(-)
-| 
-* commit 9a7e5c4aa5564c3a7c170c8acad44751c243a170
-| Author: zaigiaz <shayne.tman@gmail.com>
-| Date:   Fri Jan 23 22:50:14 2026 -0600
-| 
-|     git log again
-| 
-|  git-logs/jace-log.txt   | 162 ----------------------------------------------
-|  notes/git_submission.md |   6 ++
-|  2 files changed, 6 insertions(+), 162 deletions(-)
-| 
-* commit 0d07bbcc02c48bdc075cff132728eb44095ae63e
-| Author: zaigiaz <shayne.tman@gmail.com>
-| Date:   Fri Jan 23 22:33:15 2026 -0600
-| 
-|     git log update
-| 
-|  git-logs/git-log.txt    | 170 ----------------------
-|  git-logs/max-log.txt    |  32 -----
-|  git-logs/note.txt       |   8 +-
-|  git-logs/shayne-log.txt | 351 ++++++++++++++++++++++++++++++++++++++++++++++
-|  4 files changed, 354 insertions(+), 207 deletions(-)
-| 
-* commit 8e7a614060a01c483c7160958e047d857ac44824
-| Author: zaigiaz <shayne.tman@gmail.com>
-| Date:   Thu Jan 22 15:12:02 2026 -0600
-| 
-|     notes
-| 
-|  src/actor/crawler.rs | 9 +++++++++
-|  1 file changed, 9 insertions(+)
 |   
-*   commit 40540ecf8e4ca2ff7228b28be05af167c4c54b6d
-|\  Merge: 42968d5 9e56892
-| | Author: zaigiaz <155196761+zaigiaz@users.noreply.github.com>
-| | Date:   Wed Jan 21 13:19:13 2026 -0600
+*   commit 9773c97a012be2b57a114e53c2dca9ad5920e8e8
+|\  Merge: 9e56892 4ec11d5
+| | Author: jace ackerman <jaceackerman7@gmail.com>
+| | Date:   Fri Jan 23 18:42:09 2026 -0600
 | | 
-| |     Merge branch 'maxlayn1:main' into main
+| |     Steady state boiler code
+| | 
+| * commit 4ec11d59abedc18e237228605707f7b3ec62f4cb
+| | Author: jace ackerman <jaceackerman7@gmail.com>
+| | Date:   Fri Jan 23 18:28:16 2026 -0600
+| | 
+| |     Boiler Plate Code
+| | 
+| |  src/actor/ai_model.rs        |  31 +++++++++++++++-----------
+| |  src/actor/crawler.rs         |  26 +++++++++++++---------
+| |  src/actor/db_manager.rs      |  29 ++++++++++++++++--------
+| |  src/actor/file_handler.rs    |  47 +++++++++++++++++++++++++++++++++++++++
+| |  src/actor/user_interface.rs  |  46 ++++++++++++++++++++++++++++++++++++++
+| |  src/db/db                    | Bin 524287 -> 2621439 bytes
+| |  src/db/snap.000000000005E840 | Bin 163 -> 0 bytes
+| |  src/db/snap.0000000000CB8AAD | Bin 0 -> 84 bytes
+| |  src/main.rs                  |  32 +++++++++++++++++++++-----
+| |  9 files changed, 173 insertions(+), 38 deletions(-)
+| | 
+| * commit a5541a2888328dba6621ab8d41418962d2079cf2
+| | Author: jace ackerman <jaceackerman7@gmail.com>
+| | Date:   Thu Jan 22 21:59:58 2026 -0600
+| | 
+| |     First commit. AI actor's code needs fixed.
+| | 
+| |  src/actor/ai_model.rs        |  37 +++++++++++++++++++++++++++++++++++++
+| |  src/actor/crawler.rs         |  28 ++++++++++++++++------------
+| |  src/actor/db_manager.rs      |  10 +++++-----
+| |  src/db/conf                  |   4 ++++
+| |  src/db/db                    | Bin 0 -> 524287 bytes
+| |  src/db/snap.000000000005E840 | Bin 0 -> 163 bytes
+| |  src/main.rs                  |  10 +++++++++-
+| |  7 files changed, 71 insertions(+), 18 deletions(-)
 | |   
-| *   commit 9e5689262f5d1084739e8b443eb1c63ca72c86d1
-| |\  Merge: b6d3cba 35d9e33
+* |   commit 9e5689262f5d1084739e8b443eb1c63ca72c86d1
+|\ \  Merge: b6d3cba 35d9e33
+| |/  Author: zaigiaz <155196761+zaigiaz@users.noreply.github.com>
+|/|   Date:   Tue Jan 20 14:06:05 2026 -0600
+| |   
+| |       Merge pull request #11 from zaigiaz/main
+| |       
+| |       add toml crate, added cargo.lock to gitignore
+| |   
+| *   commit 35d9e33a83f737bd05e2f5e239e405a53a4c9e11
+| |\  Merge: 20fef78 b6d3cba
+| |/  Author: zaigiaz <155196761+zaigiaz@users.noreply.github.com>
+|/|   Date:   Tue Jan 20 14:04:53 2026 -0600
+| |   
+| |       Merge branch 'maxlayn1:main' into main
+| |   
+* |   commit b6d3cbad60b2fa1ba131f989f3921fc5d0b1ccf7
+|\ \  Merge: 827975c 7babf31
 | | | Author: zaigiaz <155196761+zaigiaz@users.noreply.github.com>
-| | | Date:   Tue Jan 20 14:06:05 2026 -0600
+| | | Date:   Mon Jan 19 18:56:04 2026 -0600
 | | | 
-| | |     Merge pull request #11 from zaigiaz/main
+| | |     Merge pull request #10 from zaigiaz/main
 | | |     
-| | |     add toml crate, added cargo.lock to gitignore
+| | |     Added CrawlerState, Fixed Build, todos
 | | | 
-* | | commit 42968d5b2296d1680707aaaeacffb931b9a90265
-| | | Author: zaigiaz <shayne.tman@gmail.com>
-| | | Date:   Wed Jan 21 13:18:49 2026 -0600
-| | | 
-| | |     quick fix
-| | | 
-| | |  data/write_ahead_log.txt | 0
-| | |  write_ahead_log.txt      | 8 --------
-| | |  2 files changed, 8 deletions(-)
-| | | 
-* | | commit e8f1e3ef5f806d7c40a4fba1a9599c5048ea683c
-| | | Author: zaigiaz <shayne.tman@gmail.com>
-| | | Date:   Wed Jan 21 13:16:32 2026 -0600
-| | | 
-| | |     added write_ahead_log, fixed batch logic
-| | | 
-| | |  src/actor/crawler.rs    |  2 +-
-| | |  src/actor/db_manager.rs | 39 ++++++++++++++++++++++++++-------------
-| | |  write_ahead_log.txt     |  8 ++++++++
-| | |  3 files changed, 35 insertions(+), 14 deletions(-)
-| | | 
-* | | commit bfa074210c766ffc543af6adeb9cb1705b21f5f8
-| | | Author: zaigiaz <shayne.tman@gmail.com>
-| | | Date:   Wed Jan 21 10:28:15 2026 -0600
-| | | 
-| | |     added basic batching to db
-| | | 
-| | |  src/actor/crawler.rs            |  9 +++--
-| | |  src/actor/db_manager.rs         | 68 ++++++++++++++++++++++++-----------
-| | |  src/test_directory/no_panic.txt |  1 +
-| | |  3 files changed, 53 insertions(+), 25 deletions(-)
-| | |   
-* | |   commit bcfde0dd2bae9696e05f4d6594d9afe895b48fc9
-|\ \ \  Merge: 1123053 35d9e33
-| | |/  Author: zaigiaz <shayne.tman@gmail.com>
-| |/|   Date:   Tue Jan 20 15:12:55 2026 -0600
-| | |   
-| | |       Merge branch 'main' of github.com:zaigiaz/Cruft-Crawler-2
-| | | 
-| * | commit 35d9e33a83f737bd05e2f5e239e405a53a4c9e11
-| |\| Merge: 20fef78 b6d3cba
-| | | Author: zaigiaz <155196761+zaigiaz@users.noreply.github.com>
-| | | Date:   Tue Jan 20 14:04:53 2026 -0600
-| | | 
-| | |     Merge branch 'maxlayn1:main' into main
-| | |   
-| | *   commit b6d3cbad60b2fa1ba131f989f3921fc5d0b1ccf7
-| | |\  Merge: 827975c 7babf31
-| | | | Author: zaigiaz <155196761+zaigiaz@users.noreply.github.com>
-| | | | Date:   Mon Jan 19 18:56:04 2026 -0600
-| | | | 
-| | | |     Merge pull request #10 from zaigiaz/main
-| | | |     
-| | | |     Added CrawlerState, Fixed Build, todos
-| | | | 
-* | | | commit 1123053c863d9d7671387d7535851307fbb82efc
-|/ / /  Author: zaigiaz <shayne.tman@gmail.com>
-| | |   Date:   Tue Jan 20 15:11:59 2026 -0600
-| | |   
-| | |       updated TODOs
-| | |   
-| | |    README.md               | 11 ++++++-----
-| | |    config.toml             |  1 +
-| | |    src/actor/crawler.rs    |  5 ++++-
-| | |    src/actor/db_manager.rs |  9 +++++----
-| | |    4 files changed, 16 insertions(+), 10 deletions(-)
-| | | 
-* | | commit 20fef7810fb3b3c14a2fdb2533fb34660ab3fe87
+| | * commit 20fef7810fb3b3c14a2fdb2533fb34660ab3fe87
 | | | Author: zaigiaz <shayne.tman@gmail.com>
 | | | Date:   Tue Jan 20 13:52:42 2026 -0600
 | | | 
@@ -193,7 +130,7 @@
 | | |  src/main.rs             |  2 ++
 | | |  5 files changed, 86 insertions(+), 11 deletions(-)
 | | | 
-* | | commit 15affb274c207205d8b59da10205c7d9719d8c1c
+| | * commit 15affb274c207205d8b59da10205c7d9719d8c1c
 | | | Author: zaigiaz <shayne.tman@gmail.com>
 | | | Date:   Tue Jan 20 13:34:57 2026 -0600
 | | | 
@@ -202,24 +139,24 @@
 | | |  config.toml | 6 ++++--
 | | |  1 file changed, 4 insertions(+), 2 deletions(-)
 | | | 
-* | | commit f99357fb54a03e968815348f44c5c3bfccc59c7a
+| | * commit f99357fb54a03e968815348f44c5c3bfccc59c7a
 | |/  Author: zaigiaz <shayne.tman@gmail.com>
-|/|   Date:   Mon Jan 19 21:51:39 2026 -0600
+| |   Date:   Mon Jan 19 21:51:39 2026 -0600
 | |   
 | |       passed in state
 | |   
 | |    src/actor/crawler.rs | 11 ++++++-----
 | |    1 file changed, 6 insertions(+), 5 deletions(-)
-| | 
-* | commit 7babf31f115bcc4bcf41ce680bfc8567111d4c51
-|\| Merge: f3bd57e 827975c
-| | Author: zaigiaz <155196761+zaigiaz@users.noreply.github.com>
-| | Date:   Mon Jan 19 18:53:03 2026 -0600
-| | 
-| |     Merge branch 'maxlayn1:main' into main
 | |   
-| *   commit 827975c5add85a9ec5d449bd688f3d9050b04667
-| |\  Merge: 3c62169 6964dba
+| *   commit 7babf31f115bcc4bcf41ce680bfc8567111d4c51
+| |\  Merge: f3bd57e 827975c
+| |/  Author: zaigiaz <155196761+zaigiaz@users.noreply.github.com>
+|/|   Date:   Mon Jan 19 18:53:03 2026 -0600
+| |   
+| |       Merge branch 'maxlayn1:main' into main
+| |   
+* |   commit 827975c5add85a9ec5d449bd688f3d9050b04667
+|\ \  Merge: 3c62169 6964dba
 | | | Author: zaigiaz <155196761+zaigiaz@users.noreply.github.com>
 | | | Date:   Thu Jan 15 21:02:32 2026 -0600
 | | | 
@@ -227,7 +164,7 @@
 | | |     
 | | |     merge and fix broken repo fork
 | | | 
-* | | commit f3bd57e1f66b0bc06fa7536db806dd4e3831f7b3
+| | * commit f3bd57e1f66b0bc06fa7536db806dd4e3831f7b3
 | | | Author: zaigiaz <shayne.tman@gmail.com>
 | | | Date:   Mon Jan 19 18:52:55 2026 -0600
 | | | 
@@ -236,7 +173,7 @@
 | | |  src/actor/crawler.rs | 24 ++++++++++++------------
 | | |  1 file changed, 12 insertions(+), 12 deletions(-)
 | | | 
-* | | commit fc2d091c867c125635b4eee333d77c2b83b66267
+| | * commit fc2d091c867c125635b4eee333d77c2b83b66267
 | | | Author: zaigiaz <shayne.tman@gmail.com>
 | | | Date:   Mon Jan 19 14:51:38 2026 -0600
 | | | 
@@ -256,9 +193,9 @@
 | | |  .../third_file.txt                              |   0
 | | |  12 files changed, 278 insertions(+), 83 deletions(-)
 | | | 
-* | | commit 9088bb81747e3485ca4b28327359d314487ba786
+| | * commit 9088bb81747e3485ca4b28327359d314487ba786
 | |/  Author: zaigiaz <shayne.tman@gmail.com>
-|/|   Date:   Thu Jan 15 19:00:24 2026 -0600
+| |   Date:   Thu Jan 15 19:00:24 2026 -0600
 | |   
 | |       added temp dir for repo submission
 | |   
@@ -269,7 +206,7 @@
 | |    notes/git_submission.md |   2 +-
 | |    5 files changed, 372 insertions(+), 1 deletion(-)
 | | 
-* | commit 6964dba6c54d82be7113fd4a941e67d457addf4c
+| * commit 6964dba6c54d82be7113fd4a941e67d457addf4c
 |/  Author: zaigiaz <shayne.tman@gmail.com>
 |   Date:   Wed Jan 14 10:33:48 2026 -0600
 |   
