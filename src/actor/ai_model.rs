@@ -18,7 +18,7 @@ use std::path::Path;
 use crate::actor::crawler::FileMeta;
 
 // run function 
-pub async fn run(actor: SteadyActorShadow, crawler_to_model_rx: SteadyRx<FileMeta>) -> Result<(),Box<dyn Error>> {
+pub async fn run(actor: SteadyActorShadow, crawler_to_model_rx: SteadyRx<String>) -> Result<(),Box<dyn Error>> {
 
     let actor = actor.into_spotlight([&crawler_to_model_rx], []);
 
@@ -32,22 +32,16 @@ pub async fn run(actor: SteadyActorShadow, crawler_to_model_rx: SteadyRx<FileMet
 // code to run our AI model through the Llama2 Crate
 fn run_model()-> anyhow::Result<()>{
 
-
     // Initialize the backend
-    let backend = LlamaBackend::init()?;
-        
-    // Set up model parameters
+    let backend = LlamaBackend::init()?;        
 
-
-    // TODO: fix the cpu aysnc buffer issue when loading model params or backend
-    // TODO: see if you can enable mmap to reduce RAM usage
-
+    // TODO: fix the cpu aysnc buffer issue when loading model params or backend (laptop)
     let model_params = LlamaModelParams::default();
+
     model_params.use_mmap();
 
-    let model_file_path  = Path::new("/home/shayne/Programming/Cruft-Crawler-2/data/model_data/Generator3B-V0.3.Q4_K_M.gguf");
-    let prompt_file_path = Path::new("/home/shayne/Programming/Cruft-Crawler-2/data/model_data/prompt.txt");
-
+    let model_file_path  = Path::new("/home/zaigiaz/Programming/Cruft-Crawler-2/data/model_data/Qwen3-4B-Instruct-2507-Q8_0.gguf");
+    let prompt_file_path = Path::new("/home/zaigiaz/Programming/Cruft-Crawler-2/data/model_data/prompt.txt");
 
     // Load the model
     let model = LlamaModel::load_from_file(
@@ -56,7 +50,6 @@ fn run_model()-> anyhow::Result<()>{
 	&model_params
     )?;
     
-
     // Create context with 2048 token context size
     let ctx_params = LlamaContextParams::default()
 	.with_n_ctx(Some(NonZeroU32::new(2048).unwrap()));
@@ -114,16 +107,16 @@ fn run_model()-> anyhow::Result<()>{
 	decoder.decode_to_string(&output_bytes, &mut output_string, false);
 	
 	print!("{}", output_string);
+
 	// Write responses to output file
 	let mut file = fs::OpenOptions::new()
 	    .append(true)   // append mode
 	    .create(true)   // create if it doesn't exist
-	    .open("../../data/output.txt");
+	    .open("../../data/model_data/output.txt");
 	
 	writeln!(file?, "{}", output_string)?;
 
 	std::io::stdout().flush()?;
-
 	
 	// Prepare next iteration
 	batch.clear();
@@ -139,21 +132,21 @@ fn run_model()-> anyhow::Result<()>{
 }
 
 // Internal behaviour for the actor
-async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_to_ai_model_rx: SteadyRx<FileMeta>) -> Result<(),Box<dyn Error>> {
+async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_to_ai_model_rx: SteadyRx<String>) -> Result<(),Box<dyn Error>> {
 	
     let mut crawler_to_ai_model_rx = crawler_to_ai_model_rx.lock().await;
-   
+   	   
     // run our AI model that is in the model/ folder
-    run_model();
-	    
     while actor.is_running(|| crawler_to_ai_model_rx.is_closed_and_empty()) {
 		
-	// Recieving data from crawler actor
+	// Get Go Signal from
 	actor.wait_avail(&mut crawler_to_ai_model_rx, 1).await;
         let recieved = actor.try_take(&mut crawler_to_ai_model_rx);
-	let message = recieved.expect("Expected a string");			
-	println!("got a string");
+	let message = recieved.expect("Expected a string from crawler");			
+	println!("got signal to go");
+	run_model();
     } 
+
 
 	return Ok(());
 }

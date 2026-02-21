@@ -2,31 +2,8 @@
 Cruft Crawler is an LLM-first background agent that runs entirely offline from a 64 GB USB drive. It profiles the filesystem slowly over time with imperceptible CPU load.
 It uses a local quantized LLM to help recommend safe deletions, and delivers a concise AI-generated report.
 
-# TODO 
-
-## main functionality
-- [ ] TODO: parse config file to get settings data
-- [ ] TODO: python script to evaluate models
-
-## crawler actor
-- [ ] TODO: Batching and Time-Based sending of Data
-- [ ] TODO: write function to compare hashes and then add that change to 'is_dupe' flag
-
-## db_manager actor
-- [ ] TODO: use sled_view to see database
-- [ ] TODO: create DB schema for Sled
-
-## LLM actor
-- [ ] TODO: try and make Max's llama code actor compliant
-- [ ] TODO: tokenization method exploration
-- [ ] TODO: Device, Memory Mapping
-- [ ] TODO: pre-prompts and style, trying out different methods
-- [ ] TODO: find limitations of Context Window
-
-## Stretch Goals && Misc 
-- [ ] <5% CPU usage
-- [ ] implement niceness and priority scheduling
-- [ ] screensaver API (X11 or Win32 api)
+# AI models used / tested
+- https://huggingface.co/unsloth/Qwen3-4B-Instruct-2507-GGUF/tree/main
 
 ## Crates needed
 - filetime: https://docs.rs/filetime/latest/filetime/ (cross-platform time-dates)
@@ -37,3 +14,7 @@ It uses a local quantized LLM to help recommend safe deletions, and delivers a c
 - SHA-2: https://docs.rs/sha2/latest/sha2/ (hash the contents of files for preformant storage)
 - hex: https://docs.rs/hex/latest/hex/ (decode hash from bytes into string)
 - serde: serialization of struct into u8 bytes
+- encoding-rs: for LLM
+- anyhow: for LLM
+- llama-cpp-2: for LLM
+

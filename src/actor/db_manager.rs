@@ -49,8 +49,12 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A,
 	// println!("here is {}", unit_cnt);
 
 
+	// NOTE: backpressure most important part of steady state graph
+
 	// TODO: might need to use this for timer-out operations
 	// steady_await_for_all_or_proceed_upon_two()
+
+	// TODO: nested await_for_any! macro could work to with two await_for_any!
 	actor.wait_avail(&mut crawler_rx, BATCH_SIZE).await;
 
 
@@ -64,7 +68,7 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A,
 
 	write_ahead("./data/write_ahead_log.txt", db_id, msg.clone());
 	let _add = db_add(db_id, &msg, &mut batch);
-	msg.meta_print();
+	// msg.meta_print();
 	}
 
 	// apply batch to db

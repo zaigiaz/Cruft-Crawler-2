@@ -84,13 +84,13 @@ impl FileMeta {
 
 
 // run function 
-pub async fn run(actor: SteadyActorShadow, crawler_tx: SteadyTx<FileMeta>, 
+pub async fn run(actor: SteadyActorShadow, crawler_tx: SteadyTx<FileMeta>, crawler_ai_tx: SteadyTx<String>,
                  state: SteadyState<CrawlerState>) -> Result<(),Box<dyn Error>> {
 
     let actor = actor.into_spotlight([], [&crawler_tx]);
 
 	if actor.use_internal_behavior {
-	    internal_behavior(actor, crawler_tx, state).await
+	    internal_behavior(actor, crawler_tx, crawler_ai_tx, state).await
 	} else {
 	    actor.simulated_behavior(vec!(&crawler_tx)).await
 	}
@@ -98,7 +98,7 @@ pub async fn run(actor: SteadyActorShadow, crawler_tx: SteadyTx<FileMeta>,
 
 
 // Internal behaviour for the actor
-async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<FileMeta>,
+async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<FileMeta>, crawler_ai_model_tx: SteadyTx<String>,
                                            state: SteadyState<CrawlerState>) -> Result<(),Box<dyn Error>> {
 
     // lock state
@@ -106,23 +106,25 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<Fi
 					       hash: String::new()}).await;
 
     let mut crawler_tx = crawler_tx.lock().await;
+    let mut crawler_ai_model_tx = crawler_ai_model_tx.lock().await;
 
     let path1 = Path::new("./src/test_directory/");
 
     let metas: Vec<FileMeta> = visit_dir(path1, &mut state)?;
     let mut stat_vec: Vec<file_stats> = vec![];
     
+    
+    // send go signal to ai model to read prompt from /data directory
+    let msg = actor.try_send(&mut crawler_ai_model_tx, String::from("GO")).expect("message was sent");
+
     while actor.is_running(|| crawler_tx.mark_closed()) {
 
-	for m in &metas {
-	   	
 	actor.wait_vacant(&mut crawler_tx, 1).await;
-	let message = m.clone();
 
-	stat_vec.push(compute_file_stats(m));
-
-	actor.try_send(&mut crawler_tx, message).expect("couldn't send to DB");
-
+	for m in &metas {
+	    let message = m.clone();
+	    stat_vec.push(compute_file_stats(m));
+	    actor.try_send(&mut crawler_tx, message).expect("couldn't send to DB");
 	}
 
 	// TODO: change this when we make this background process (2 weeks)
