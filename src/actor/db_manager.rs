@@ -6,6 +6,7 @@ use steady_state::*;
 use std::error::Error;
 use std::fs::OpenOptions;
 use std::io::prelude::*;
+use std::io::Write;
 use crate::actor::crawler::FileMeta;
 use std::path::{Path, PathBuf};
 use sled::{Batch, open};
@@ -54,7 +55,7 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A,
 	// TODO: might need to use this for timer-out operations
 	// steady_await_for_all_or_proceed_upon_two()
 
-	// TODO: nested await_for_any! macro could work to with two await_for_any!
+	// TODO: nested await_for_any! macro could work to with two await_for_any!u
 	actor.wait_avail(&mut crawler_rx, BATCH_SIZE).await;
 
 
@@ -102,9 +103,9 @@ Ok(())
 // edit db entry given key
 fn db_edit(key: i32, value: FileMeta, batch: &mut Batch) -> Result<(), Box<dyn Error>> {
     // sled has immutable db, so we need to delete old key then insert new
-    let _remove = db_remove(key, batch);
-    let _add = db_add(key, &value, batch);
-Ok(())
+    let _ = db_remove(key, batch)?;
+    let _ = db_add(key, &value, batch)?;
+    Ok(())
 }
 
 
@@ -116,21 +117,20 @@ fn db_remove(key: i32, batch: &mut Batch) -> Result<(), Box<dyn Error>> {
 }
 
 
-fn write_ahead(WriteFile: &str, key: i32, value: FileMeta) -> Result<(), Box<dyn Error>> {
 
+fn write_ahead(WriteFile: &str, key: i32, value: FileMeta) -> Result<(), std::io::Error> {
     let mut file = OpenOptions::new()
         .write(true)
         .append(true)
-        .open(WriteFile)
-        .unwrap();
+        .open(WriteFile)?;
 
     let value = value.abs_path.to_string_lossy();
 
-    // append 
-    if let Err(e) = writeln!(file, "{} {}", key, value) {
+    writeln!(file, "{} {}", key, value).map_err(|e| {
         eprintln!("Couldn't write to file: {}", e);
-    }
-
+        std::io::Error::new(std::io::ErrorKind::Other, e)
+    })?;
 
     Ok(())
 }
+

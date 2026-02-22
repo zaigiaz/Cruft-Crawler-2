@@ -84,13 +84,13 @@ impl FileMeta {
 
 
 // run function 
-pub async fn run(actor: SteadyActorShadow, crawler_tx: SteadyTx<FileMeta>, crawler_ai_tx: SteadyTx<String>,
+pub async fn run(actor: SteadyActorShadow, crawler_tx: SteadyTx<FileMeta>, 
                  state: SteadyState<CrawlerState>) -> Result<(),Box<dyn Error>> {
 
     let actor = actor.into_spotlight([], [&crawler_tx]);
 
 	if actor.use_internal_behavior {
-	    internal_behavior(actor, crawler_tx, crawler_ai_tx, state).await
+	    internal_behavior(actor, crawler_tx, state).await
 	} else {
 	    actor.simulated_behavior(vec!(&crawler_tx)).await
 	}
@@ -98,7 +98,7 @@ pub async fn run(actor: SteadyActorShadow, crawler_tx: SteadyTx<FileMeta>, crawl
 
 
 // Internal behaviour for the actor
-async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<FileMeta>, crawler_ai_model_tx: SteadyTx<String>,
+async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<FileMeta>,
                                            state: SteadyState<CrawlerState>) -> Result<(),Box<dyn Error>> {
 
     // lock state
@@ -106,16 +106,13 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<Fi
 					       hash: String::new()}).await;
 
     let mut crawler_tx = crawler_tx.lock().await;
-    let mut crawler_ai_model_tx = crawler_ai_model_tx.lock().await;
 
     let path1 = Path::new("./src/test_directory/");
 
     let metas: Vec<FileMeta> = visit_dir(path1, &mut state)?;
     let mut stat_vec: Vec<file_stats> = vec![];
     
-    
-    // send go signal to ai model to read prompt from /data directory
-    let msg = actor.try_send(&mut crawler_ai_model_tx, String::from("GO")).expect("message was sent");
+    // ai model code was sending here
 
     while actor.is_running(|| crawler_tx.mark_closed()) {
 
@@ -245,4 +242,6 @@ fn compute_file_stats(Meta: &FileMeta) -> file_stats {
 
     f_item
 }
+
+
 
