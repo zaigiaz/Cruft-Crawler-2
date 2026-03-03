@@ -68,7 +68,7 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A,
 
 	write_ahead("./data/write_ahead_log.txt", db_id, msg.clone());
 	let _add = db_add(db_id, &msg, &mut batch);
-	// msg.meta_print();
+	msg.meta_print();
 	}
 
 	// apply batch to db
