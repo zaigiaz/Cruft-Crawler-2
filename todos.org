@@ -1,0 +1,39 @@
+* OVERVIEW
+I need to finish
+
+* TODOS
+** CRAWLER
+TODO: refactor the FileMeta struct and the file_stats struct to be better, or integrate them both
+TODO: relative and absolute path are the same, recheck logic
+TODO: cleanup when we reach end of folder
+TODO: skip hidden dierctories or files?
+TODO: fallback logic if entire program crashes (or if files already in DB)
+TODO: cleanup crate names and prune redundancies
+TODO: think about how this should work: fields, etc.
+TODO: think about how we will calculate stats to give to model
+TODO: implement voting or consensus logic?
+TODO: double check that hashing bytes is correct (integration testing) for get_file_hash()
+TODO: integration testing for visit_dir()
+TODO: log errors here
+TODO: integration and unit testingw
+
+** DB MANAGER
+TODO: Database schema, caching
+TODO: inotify integration
+TODO: crawler <-> DB fallback logic
+TODO: actor shutdown?
+TODO: match results for db operations
+TODO: add fallback state 
+TODO: example code that I need to change
+TODO: code to check db_status before doing any db operations (match result)
+TODO: might need to use this for timer-out operations
+TODO: steady_await_for_all { await avail, await timer} logic
+TODO: nested await_for_any! macro could work to with two await_for_any!
+TODO: add check to make sure counter is always asc order
+TODO: use .back() to get iter for last element, then compare with write-ahead log
+TODO: Better write ahead logic and log cleanup (rotate log?)
+TODO: integration and unit testing
+
+** INOTIFY
+TODO: basic initiation
+TODO: basic actor setup

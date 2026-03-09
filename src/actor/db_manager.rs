@@ -11,9 +11,15 @@ use crate::actor::crawler::FileMeta;
 use std::path::{Path, PathBuf};
 use sled::{Batch, open};
 
-// TODO: Database schema
+// TODO: Database schema, caching
+// TODO: inotify integration
+// TODO: crawler <-> DB fallback logic
 // TODO: actor shutdown?
+// TODO: match results for db operations
 
+// NOTE: backpressure most important part of steady state graph
+
+// TODO: add fallback state 
 struct db_state {
     db_id: i32,
     // more fields here
@@ -41,7 +47,7 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A,
     let mut db_id: i32 = 0;
 
 
-    // TODO: code to check db_status before doing any db operations
+    // TODO: code to check db_status before doing any db operations (match result)
 
     while actor.is_running(|| crawler_rx.is_closed_and_empty()) {
 
@@ -50,12 +56,11 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A,
 	// println!("here is {}", unit_cnt);
 
 
-	// NOTE: backpressure most important part of steady state graph
 
 	// TODO: might need to use this for timer-out operations
-	// steady_await_for_all_or_proceed_upon_two()
+	// TODO: steady_await_for_all { await avail, await timer} logic
+	// TODO: nested await_for_any! macro could work to with two await_for_any!
 
-	// TODO: nested await_for_any! macro could work to with two await_for_any!u
 	actor.wait_avail(&mut crawler_rx, BATCH_SIZE).await;
 
 
@@ -67,9 +72,9 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A,
 	loop_ctr += 1;
 	db_id    += 1;
 
-	write_ahead("./data/write_ahead_log.txt", db_id, msg.clone());
+	write_log("./data/write_ahead_log.txt", db_id, msg.clone());
 	let _add = db_add(db_id, &msg, &mut batch);
-	// msg.meta_print();
+	msg.meta_print();
 	}
 
 	// apply batch to db
@@ -117,8 +122,8 @@ fn db_remove(key: i32, batch: &mut Batch) -> Result<(), Box<dyn Error>> {
 }
 
 
-
-fn write_ahead(WriteFile: &str, key: i32, value: FileMeta) -> Result<(), std::io::Error> {
+// TODO: Better write ahead logic and log cleanup (rotate log?)
+fn write_log(WriteFile: &str, key: i32, value: FileMeta) -> Result<(), std::io::Error> {
     let mut file = OpenOptions::new()
         .write(true)
         .append(true)
@@ -133,4 +138,5 @@ fn write_ahead(WriteFile: &str, key: i32, value: FileMeta) -> Result<(), std::io
 
     Ok(())
 }
+
 

@@ -14,12 +14,14 @@ use std::error::Error;
 use serde::{Serialize, Deserialize};
 use hex;
 
-// TODO: skip hidden dierctories or files?
-// TODO: implement fallback logic (write-ahead log or total actor failure)
-// TODO: cleanup crate names
+// TODO: refactor the FileMeta struct and the file_stats struct to be better, or integrate them both
+// TODO: relative and absolute path are the same, recheck logic
 
-// TODO: how to compare every item in db to figure out if files are dupes
-// TODO: have hash be the key for the db
+// TODO: cleanup when we reach end of folder
+// TODO: skip hidden dierctories or files?
+// TODO: fallback logic if entire program crashes (or if files already in DB)
+// TODO: cleanup crate names and prune redundancies
+
 
 // TODO: think about how this should work: fields, etc.
 pub(crate) struct CrawlerState {
@@ -107,7 +109,7 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<Fi
 
     let mut crawler_tx = crawler_tx.lock().await;
 
-    let path1 = Path::new("./src/test_directory/");
+    let path1 = Path::new("/home/shayne/Downloads");
 
     let metas: Vec<FileMeta> = visit_dir(path1, &mut state)?;
     let mut stat_vec: Vec<file_stats> = vec![];
@@ -124,7 +126,7 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<Fi
 	    actor.try_send(&mut crawler_tx, message).expect("couldn't send to DB");
 	}
 
-	// TODO: change this when we make this background process (2 weeks)
+	// TODO: implement voting or consensus logic?
 	actor.request_shutdown().await;
     }
 
@@ -133,7 +135,7 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<Fi
 
 
 // Read first 1024 bytes of file then hash, note that this hashes the bytes, not a string from the file
-// TODO: double check that hashing bytes is correct
+// TODO: double check that hashing bytes is correct (integration testing) for get_file_hash()
 pub fn get_file_hash(file_name: PathBuf) -> Result<String, Box<dyn Error>> {
 
     let mut file = std::fs::File::open(file_name)?;
@@ -159,6 +161,7 @@ pub fn get_file_hash(file_name: PathBuf) -> Result<String, Box<dyn Error>> {
 
 // function to visit test directory and return metadata of each file and insert into metadata struct
 // also updates state per every entry
+// TODO: integration testing for visit_dir()
 pub fn visit_dir(dir: &Path,
                  state: &mut StateGuard<'_, CrawlerState> ) -> Result<Vec<FileMeta>, Box<dyn Error>> {
 
