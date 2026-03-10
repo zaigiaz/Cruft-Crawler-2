@@ -1,12 +1,9 @@
 * OVERVIEW
-I need to finish
+I need to finish these todos over spring break
 
 * TODOS
 ** CRAWLER
-TODO: refactor the FileMeta struct and the file_stats struct to be better, or integrate them both
-TODO: relative and absolute path are the same, recheck logic
 TODO: cleanup when we reach end of folder
-TODO: skip hidden dierctories or files?
 TODO: fallback logic if entire program crashes (or if files already in DB)
 TODO: cleanup crate names and prune redundancies
 TODO: think about how this should work: fields, etc.

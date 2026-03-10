@@ -26,7 +26,7 @@ struct db_state {
 }
 
 // size of batch we want (# of FileMeta Structs before writing to DB)
-const BATCH_SIZE: usize = 2;
+const BATCH_SIZE: usize = 1;
 
 pub async fn run(actor: SteadyActorShadow, 
                  crawler_rx: SteadyRx<FileMeta> ) -> Result<(),Box<dyn Error>> {
@@ -42,7 +42,7 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A,
 
 
     // TODO: example code that I need to change
-    let mut db: sled::Db = sled::open("./data/db").unwrap();
+    let mut db: sled::Db = sled::open("./data/db").expect("couldnt open db");
     let mut loop_ctr: i32 = 0;
     let mut db_id: i32 = 0;
 
@@ -55,26 +55,26 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A,
 	let unit_cnt  = actor.avail_units(&mut crawler_rx);
 	// println!("here is {}", unit_cnt);
 
-
-
 	// TODO: might need to use this for timer-out operations
 	// TODO: steady_await_for_all { await avail, await timer} logic
 	// TODO: nested await_for_any! macro could work to with two await_for_any!
 
 	actor.wait_avail(&mut crawler_rx, BATCH_SIZE).await;
 
-
 	// convert batch_size constant to i32 to work	
 	while loop_ctr < BATCH_SIZE as i32 { 
+
+
 	let recieved = actor.try_take(&mut crawler_rx);
 	let msg = recieved.expect("expected FileMeta Struct (crawler -> db_actor)");
+	msg.meta_print();
 
 	loop_ctr += 1;
 	db_id    += 1;
 
+
 	write_log("./data/write_ahead_log.txt", db_id, msg.clone());
 	let _add = db_add(db_id, &msg, &mut batch);
-	msg.meta_print();
 	}
 
 	// apply batch to db

@@ -8,14 +8,12 @@ use std::path::{Path, PathBuf};
 use sha2::{Sha256, Digest};
 use std::io::prelude::*;
 use walkdir::WalkDir;
+use walkdir::DirEntry;
 use std::ffi::OsStr;
 use filetime::FileTime;
 use std::error::Error;
 use serde::{Serialize, Deserialize};
 use hex;
-
-// TODO: refactor the FileMeta struct and the file_stats struct to be better, or integrate them both
-// TODO: relative and absolute path are the same, recheck logic
 
 // TODO: cleanup when we reach end of folder
 // TODO: skip hidden dierctories or files?
@@ -33,7 +31,6 @@ pub(crate) struct CrawlerState {
 // metadata struct
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub(crate) struct FileMeta {
-    pub rel_path:  PathBuf,
     pub abs_path:  PathBuf,
     pub file_name: String,
     pub hash:      String,
@@ -44,25 +41,12 @@ pub(crate) struct FileMeta {
     pub readonly:  bool,
 } 
 
-// TODO: think about how we will calculate stats to give to model
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
-pub(crate) struct file_stats {
-    pub  hash:              String,
-    pub  abs_path:          PathBuf,
-    pub  is_dupe:           bool,
-    pub  time_elapsed:      i64,    
-    pub  last_access:       i32,
-    pub  size:              u64,
-    pub  readonly:          bool,
-    pub  is_file:           bool,
-}
 
 impl FileMeta {
 // for easy debugging of struct if needed
    pub fn meta_print(&self) {
         println!("\n--------------------");
 	println!("Absolute_Path: {:?}", self.abs_path);
-	println!("Relative_Path: {:?}", self.rel_path);
 	println!("File_Name: {}",       self.file_name);
 	println!("hash: {}",            self.hash);
 	println!("is_file: {}",         self.is_file);
@@ -109,10 +93,9 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<Fi
 
     let mut crawler_tx = crawler_tx.lock().await;
 
-    let path1 = Path::new("/home/shayne/Downloads");
+    let path1 = Path::new("/home/zaigiaz/Programming/home-lab-notes/");
 
     let metas: Vec<FileMeta> = visit_dir(path1, &mut state)?;
-    let mut stat_vec: Vec<file_stats> = vec![];
     
     // ai model code was sending here
 
@@ -121,8 +104,7 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<Fi
 	actor.wait_vacant(&mut crawler_tx, 1).await;
 
 	for m in &metas {
-	    let message = m.clone();
-	    stat_vec.push(compute_file_stats(m));
+	    let message = m.clone();	  
 	    actor.try_send(&mut crawler_tx, message).expect("couldn't send to DB");
 	}
 
@@ -167,18 +149,22 @@ pub fn visit_dir(dir: &Path,
 
     let mut metas: Vec<FileMeta> = Vec::new();
 
+    let walker = WalkDir::new(dir).into_iter();
+
     // Read the directory (non-recursive)
-    for entry_res in WalkDir::new(dir) {
+    for entry_res in walker.filter_entry(|e| !is_hidden(e)) {
+
         let entry = entry_res?;
-        let rel_path: &Path = entry.path();
-	let abs_path: PathBuf = std::path::absolute(&rel_path)?;
+
+        let abs_path: PathBuf = entry.path()
+	                             .to_path_buf();
+
+	// for stateguard
+	// NOTE: why is this here?
 	state.abs_path = abs_path.clone();
 
-	// convert relative path to Pathbuf for printing
-	let rel_path: PathBuf = rel_path.to_path_buf();
-
+ 
 	let name_os: &OsStr = entry.file_name();
-
 	let file_name: String = match name_os.to_str() {
             Some(s) => s.to_owned(),
             None => name_os.to_string_lossy().into_owned(),
@@ -201,7 +187,6 @@ pub fn visit_dir(dir: &Path,
 		}
 
                 metas.push(FileMeta {
-		    rel_path,
 		    abs_path,
                     file_name,
 		    hash, 
@@ -221,30 +206,11 @@ pub fn visit_dir(dir: &Path,
     Ok(metas)
 }
 
-fn compute_file_stats(Meta: &FileMeta) -> file_stats {
 
-    let mut f_item = file_stats  {
-	hash:         String::from("").into(),
-	abs_path:     String::from("").into(),
-	is_dupe:      false,
-	time_elapsed: 0,
-	last_access:  0,
-	size:         0,
-	readonly:     false,
-	is_file:      false,
-    };
-
-
-    f_item.time_elapsed  = Meta.modified - Meta.created;
-    f_item.abs_path      = Meta.abs_path.clone();
-    f_item.hash          = Meta.hash.clone();
-    f_item.readonly      = Meta.readonly;
-    f_item.is_file       = Meta.is_file;
-    f_item.size          = Meta.size;
-
-
-    f_item
+// avoid hidden directories and files
+fn is_hidden(entry: &DirEntry) -> bool {
+    entry.file_name()
+         .to_str()
+         .map(|s| s.starts_with("."))
+         .unwrap_or(false)
 }
-
-
-

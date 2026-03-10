@@ -1,15 +1,12 @@
 use steady_state::*;
 use std::time::Duration;
-// use crate::actor::crawler::FileMeta;
+use crate::actor::crawler::FileMeta;
 
 // crate that adds in both the actors from the actor/ directory
 pub(crate) mod actor {  
     pub(crate) mod crawler;
     pub(crate) mod db_manager;
-    // pub(crate) mod ai_model;
 }
-
-//TODO: Add functionality for priority setting using screensaver api
 
 fn main() -> Result<(), Box<dyn Error>> {
 
@@ -27,7 +24,6 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 const NAME_CRAWLER: &str = "CRAWLER";
 const NAME_DB: &str = "DB_MANAGER";
-// const NAME_AI_MODEL: &str = "AI_MODEL";
 
 fn build_graph(graph: &mut Graph) {
 
@@ -39,7 +35,7 @@ fn build_graph(graph: &mut Graph) {
 
     // Build Channels for Sender and Reciever Tx and Rx for communication between actors
     let (crawler_tx, crawler_rx)                   = channel_builder.build();
-    // let (crawler_ai_model_tx, crawler_ai_model_rx) = channel_builder.build();
+
     
     // build actor interface
     let actor_builder = graph.actor_builder()
@@ -56,11 +52,6 @@ fn build_graph(graph: &mut Graph) {
     actor_builder.with_name(NAME_DB)
         .build(move |actor| actor::db_manager::run(actor, crawler_rx.clone()) 
                , SoloAct);
-
-    // AI actor
-    // actor_builder.with_name(NAME_AI_MODEL)
-    //     .build(move |actor | actor::ai_model::run(actor, crawler_ai_model_rx.clone())
-    //             , SoloAct); 
 
 }
 
