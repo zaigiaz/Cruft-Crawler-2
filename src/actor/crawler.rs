@@ -1,6 +1,4 @@
 #![allow(unused)]
-#![allow(non_camel_case_types)]
-#![allow(non_snake_case)]
 
 use steady_state::*;
 
@@ -23,7 +21,6 @@ pub(crate) struct CrawlerState {
     pub(crate) abs_path:  PathBuf,    
 }
 
-
 // metadata struct
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub(crate) struct FileMeta {
@@ -36,7 +33,6 @@ pub(crate) struct FileMeta {
     pub created:   i64,
     pub readonly:  bool,
 } 
-
 
 impl FileMeta {
 // for easy debugging of struct if needed
@@ -87,7 +83,7 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<Fi
     let mut state = state.lock(|| CrawlerState{abs_path: PathBuf::new()}).await;
     let mut crawler_tx = crawler_tx.lock().await;
 
-    // temp dir
+    // TODO: replace this with config file or setup at command line
     let path1 = Path::new("/home/zaigiaz/Programming/home-lab-notes/");
 
     let metas: Vec<FileMeta> = visit_dir(path1, &mut state)?;
@@ -103,7 +99,7 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<Fi
 	    actor.try_send(&mut crawler_tx, message).expect("couldn't send to DB");
 	}
 
-	// TODO: implement voting or consensus logic?
+	// TODO: implement voting or consensus logic	
 	actor.request_shutdown().await;
     }
 
@@ -131,8 +127,11 @@ pub fn get_file_hash(file_name: PathBuf) -> Result<String, Box<dyn Error>> {
 
     // encodes value as string
     let convert = hex::encode(out);
+
+    // slice to 16 digits
+    let final_value = &convert[0..16];
     
-    Ok(convert)
+    Ok(final_value.to_string())
 }
 
 
@@ -214,4 +213,31 @@ fn our_filter(entry: &DirEntry) -> bool {
               filter.iter().any(|f| f.is_empty() && s.contains(f))
 	  })
 	  .unwrap_or(false)
+}
+
+
+
+// TODO: finish unit testing for crawler
+#[cfg(test)]
+pub(crate) mod crawler_tests {
+
+    use steady_state::*;
+    use super::*;
+
+#[test]
+fn test_crawler() -> Result<(), Box<dyn Error>> {
+
+    let mut graph = GraphBuilder::for_testing().build(());
+    let (crawler_tx, crawler_rx)                   = channel_builder.build();
+
+
+    graph.actor_builder().with_name("UnitTest")
+        .build(move |context| internal_behavior(actor, crawler_tx, state));
+
+
+    graph.start();
+    // because clean shutdown waits for closed and empty
+    // , it does not happen until our test data is digested. 
+    graph.request_shutdown(); // critical before block_until_stopped
+	}
 }
