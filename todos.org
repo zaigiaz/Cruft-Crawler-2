@@ -3,7 +3,6 @@ I need to finish these todos over spring break
 
 * TODOS
 ** CRAWLER
-TODO: cleanup when we reach end of folder
 TODO: fallback logic if entire program crashes (or if files already in DB)
 TODO: cleanup crate names and prune redundancies
 TODO: think about how this should work: fields, etc.
@@ -12,9 +11,10 @@ TODO: implement voting or consensus logic?
 TODO: double check that hashing bytes is correct (integration testing) for get_file_hash()
 TODO: integration testing for visit_dir()
 TODO: log errors here
-TODO: integration and unit testingw
+TODO: integration and unit testing
 
 ** DB MANAGER
+TODO: https://sledoview.greq.me/ download and use this for viewing database
 TODO: Database schema, caching
 TODO: inotify integration
 TODO: crawler <-> DB fallback logic

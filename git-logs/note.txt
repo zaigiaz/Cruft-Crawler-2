@@ -1,3 +1,0 @@
-added different log files for all of our work on different branches
-
-- Shayne

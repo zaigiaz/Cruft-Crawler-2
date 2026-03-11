@@ -15,16 +15,12 @@ use std::error::Error;
 use serde::{Serialize, Deserialize};
 use hex;
 
-// TODO: cleanup when we reach end of folder
-// TODO: skip hidden dierctories or files?
 // TODO: fallback logic if entire program crashes (or if files already in DB)
 // TODO: cleanup crate names and prune redundancies
 
-
 // TODO: think about how this should work: fields, etc.
 pub(crate) struct CrawlerState {
-    pub(crate) abs_path:  PathBuf,
-    pub(crate) hash:      String,    
+    pub(crate) abs_path:  PathBuf,    
 }
 
 
@@ -87,12 +83,11 @@ pub async fn run(actor: SteadyActorShadow, crawler_tx: SteadyTx<FileMeta>,
 async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<FileMeta>,
                                            state: SteadyState<CrawlerState>) -> Result<(),Box<dyn Error>> {
 
-    // lock state
-    let mut state = state.lock(|| CrawlerState{abs_path: PathBuf::new(),
-					       hash: String::new()}).await;
-
+    // lock state and tx channel
+    let mut state = state.lock(|| CrawlerState{abs_path: PathBuf::new()}).await;
     let mut crawler_tx = crawler_tx.lock().await;
 
+    // temp dir
     let path1 = Path::new("/home/zaigiaz/Programming/home-lab-notes/");
 
     let metas: Vec<FileMeta> = visit_dir(path1, &mut state)?;
@@ -152,17 +147,17 @@ pub fn visit_dir(dir: &Path,
     let walker = WalkDir::new(dir).into_iter();
 
     // Read the directory (non-recursive)
-    for entry_res in walker.filter_entry(|e| !is_hidden(e)) {
+    for entry_res in walker.filter_entry(|e| !our_filter(e)) {
 
         let entry = entry_res?;
 
         let abs_path: PathBuf = entry.path()
 	                             .to_path_buf();
 
-	// for stateguard
-	// NOTE: why is this here?
+	// NOTE: update state to reflect last crawled entry
+	// NOTE: could use DirEntry or another concept instead
 	state.abs_path = abs_path.clone();
-
+	
  
 	let name_os: &OsStr = entry.file_name();
 	let file_name: String = match name_os.to_str() {
@@ -183,7 +178,6 @@ pub fn visit_dir(dir: &Path,
 
 		if is_file {
 		hash = get_file_hash(abs_path.clone()).expect("didn't get hash value");
-		state.hash = hash.clone()
 		}
 
                 metas.push(FileMeta {
@@ -207,10 +201,17 @@ pub fn visit_dir(dir: &Path,
 }
 
 
-// avoid hidden directories and files
-fn is_hidden(entry: &DirEntry) -> bool {
+// avoid hidden directories and files, other filters
+// avoid linux directories that are below the home directory of the user
+fn our_filter(entry: &DirEntry) -> bool {
+
+    let filter = vec!["tmp", "var", "sys"];
+
     entry.file_name()
-         .to_str()
-         .map(|s| s.starts_with("."))
-         .unwrap_or(false)
+        .to_str()
+          .map(|s| {
+	      s.starts_with(".") || 
+              filter.iter().any(|f| f.is_empty() && s.contains(f))
+	  })
+	  .unwrap_or(false)
 }
