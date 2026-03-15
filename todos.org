@@ -6,12 +6,11 @@ I need to finish these todos over spring break
 TODO: fallback logic if entire program crashes (or if files already in DB)
 TODO: cleanup crate names and prune redundancies
 TODO: think about how this should work: fields, etc.
-TODO: think about how we will calculate stats to give to model
+TODO: model prompt message string
 TODO: implement voting or consensus logic?
-TODO: double check that hashing bytes is correct (integration testing) for get_file_hash()
-TODO: integration testing for visit_dir()
-TODO: log errors here
-TODO: integration and unit testing
+TODO: (integration testing) for get_file_hash()
+TODO: (integration testing) for visit_dir()
+TODO: log errors, and add match or .expect() for various functions
 
 ** DB MANAGER
 TODO: https://sledoview.greq.me/ download and use this for viewing database
@@ -34,3 +33,8 @@ TODO: integration and unit testing
 ** INOTIFY
 TODO: basic initiation
 TODO: basic actor setup
+TODO: watch-list management
+
+** Cgroups
+TODO: learn and see how it interacts with steady-state process
+TODO: could be our silver bullet

@@ -84,9 +84,10 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<Fi
     let mut crawler_tx = crawler_tx.lock().await;
 
     // TODO: replace this with config file or setup at command line
+    // let search_path = read_config();
     let path1 = Path::new("/home/zaigiaz/Programming/home-lab-notes/");
 
-    let metas: Vec<FileMeta> = visit_dir(path1, &mut state)?;
+    let vec_metadata: Vec<FileMeta> = visit_dir(path1, &mut state)?;
     
     // ai model code was sending here
 
@@ -94,7 +95,7 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<Fi
 
 	actor.wait_vacant(&mut crawler_tx, 1).await;
 
-	for m in &metas {
+	for m in &vec_metadata {
 	    let message = m.clone();	  
 	    actor.try_send(&mut crawler_tx, message).expect("couldn't send to DB");
 	}

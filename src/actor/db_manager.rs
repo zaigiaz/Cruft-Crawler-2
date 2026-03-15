@@ -11,13 +11,6 @@ use crate::actor::crawler::FileMeta;
 use std::path::{Path, PathBuf};
 use sled::{Batch, open};
 
-// TODO: Database schema, caching
-// TODO: inotify integration
-// TODO: crawler <-> DB fallback logic
-// TODO: actor shutdown?
-// TODO: match results for db operations
-
-// NOTE: backpressure most important part of steady state graph
 
 // TODO: add fallback state 
 struct db_state {
@@ -41,13 +34,18 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A,
     let mut crawler_rx = crawler_rx.lock().await;
 
 
-    // TODO: example code that I need to change
+    
+    // TODO: add surefire pathway to database
+    // TODO: add way to get last key from db | can use .back()
     let mut db: sled::Db = sled::open("./data/db").expect("couldnt open db");
+
+    let iter: sled::Iter;
     let mut loop_ctr: i32 = 0;
     let mut db_id: i32 = 0;
 
 
     // TODO: code to check db_status before doing any db operations (match result)
+    
 
     while actor.is_running(|| crawler_rx.is_closed_and_empty()) {
 
@@ -59,11 +57,13 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A,
 	// TODO: steady_await_for_all { await avail, await timer} logic
 	// TODO: nested await_for_any! macro could work to with two await_for_any!
 
-	actor.wait_avail(&mut crawler_rx, BATCH_SIZE).await;
+	let db_clean = await_for_any!(actor.wait_avail(&mut crawler_rx, BATCH_SIZE),
+				      actor.wait_timeout(Duration::from_secs(5))
+	                              );
+
 
 	// convert batch_size constant to i32 to work	
 	while loop_ctr < BATCH_SIZE as i32 { 
-
 
 	let recieved = actor.try_take(&mut crawler_rx);
 	let msg = recieved.expect("expected FileMeta Struct (crawler -> db_actor)");
@@ -84,7 +84,8 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A,
 
 	// TODO: add check to make sure counter is always asc order
 	// TODO: use .back() to get iter for last element, then compare with write-ahead log
-	}
+    }
+
   Ok(())
 }
 

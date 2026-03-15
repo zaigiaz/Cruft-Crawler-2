@@ -18,3 +18,6 @@ It uses a local quantized LLM to help recommend safe deletions, and delivers a c
 - anyhow: for LLM
 - llama-cpp-2: for LLM
 
+
+# Research Notes 
+- https://lore.kernel.org/cgroups/abFsDg5m3lp2vVOX@cmpxchg.org/T/#t (linux kernel cgroup discussion on AI agents)
