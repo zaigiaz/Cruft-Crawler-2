@@ -69,21 +69,29 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A,
 	let msg = recieved.expect("expected FileMeta Struct (crawler -> db_actor)");
 	msg.meta_print();
 
+
+	// NOTE: db_loop counter could also be used to check how many prompts we have given to the LLM so far,
+	// to reduce context window by reprompting and wiping past history in LLM
 	loop_ctr += 1;
 	db_id    += 1;
 
-
 	write_log("./data/write_ahead_log.txt", db_id, msg.clone());
+
+
+	// I want the db to have: db_id (counter), db_hash: key is hash value of file, prompt addition message as content;
 	let _add = db_add(db_id, &msg, &mut batch);
 	}
 
-	// apply batch to db
+	// apply batch to db (this is atomic and prevents failure in case actor failure during operation)
 	db.apply_batch(batch)?;
 
 	loop_ctr = 0;
 
 	// TODO: add check to make sure counter is always asc order
-	// TODO: use .back() to get iter for last element, then compare with write-ahead log
+	// NOTE: for unit testing
+
+	// TODO: use .back() to get iter for last element, then compare with write-ahead log to ensure we are at correct position
+	// NOTE: addtionally I can think of this like a play-cursor or iterator, can be used in addition with inotify actor later
     }
 
   Ok(())

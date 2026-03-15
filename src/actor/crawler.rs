@@ -230,15 +230,32 @@ fn test_crawler() -> Result<(), Box<dyn Error>> {
 
     let mut graph = GraphBuilder::for_testing().build(());
     let (crawler_tx, crawler_rx)                   = channel_builder.build();
+    let state = new_state();
 
 
     graph.actor_builder().with_name("UnitTest")
-        .build(move |context| internal_behavior(actor, crawler_tx, state));
+        .build(move |context| internal_behavior(actor, crawler_tx, state), SoloAct);
 
 
+
+    // TODO: test sending on crawler_tx
+    // assert_steady_tx_eq_send!(&crawler_tx, file_meta struct)
+
+    // TODO: test file_hash function
+    let test_str: PathBuf = "./src/test_directory/second.txt";
+    let test_output: String = String::from("example");
+    let hashed_output: String = visit_dir(test_str);
+    assert_eq!(hashed_output, test_output);
+
+
+    // TODO: test visit_dir function
+
+
+    
     graph.start();
     // because clean shutdown waits for closed and empty
     // , it does not happen until our test data is digested. 
     graph.request_shutdown(); // critical before block_until_stopped
+    Ok(())
 	}
 }
