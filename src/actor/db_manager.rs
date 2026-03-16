@@ -10,6 +10,13 @@ use std::io::Write;
 use crate::actor::crawler::FileMeta;
 use std::path::{Path, PathBuf};
 use sled::{Batch, open};
+use futures::select;
+
+// TODO: add check to make sure counter is always asc order
+// NOTE: for unit testing
+
+// TODO: use .back() to get iter for last element, then compare with write-ahead log to ensure we are at correct position
+// NOTE: addtionally I can think of this like a play-cursor or iterator, can be used in addition with inotify actor later
 
 
 // TODO: add fallback state 
@@ -57,12 +64,14 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A,
 	// TODO: steady_await_for_all { await avail, await timer} logic
 	// TODO: nested await_for_any! macro could work to with two await_for_any!
 
-	let db_clean = await_for_any!(actor.wait_avail(&mut crawler_rx, BATCH_SIZE),
-				      actor.wait_timeout(Duration::from_secs(5))
-	                              );
 
+	let completed_future = await_for_any!(actor.wait_avail(&mut crawler_rx, BATCH_SIZE),
+		       actor.wait_timeout(Duration::from_secs(5))
+	);
 
+	
 	// convert batch_size constant to i32 to work	
+	// if batch_or_timeout {
 	while loop_ctr < BATCH_SIZE as i32 { 
 
 	let recieved = actor.try_take(&mut crawler_rx);
@@ -82,16 +91,10 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A,
 	let _add = db_add(db_id, &msg, &mut batch);
 	}
 
+
 	// apply batch to db (this is atomic and prevents failure in case actor failure during operation)
 	db.apply_batch(batch)?;
-
-	loop_ctr = 0;
-
-	// TODO: add check to make sure counter is always asc order
-	// NOTE: for unit testing
-
-	// TODO: use .back() to get iter for last element, then compare with write-ahead log to ensure we are at correct position
-	// NOTE: addtionally I can think of this like a play-cursor or iterator, can be used in addition with inotify actor later
+	loop_ctr = 0;	
     }
 
   Ok(())
@@ -148,4 +151,21 @@ fn write_log(WriteFile: &str, key: i32, value: FileMeta) -> Result<(), std::io::
     Ok(())
 }
 
+// this is a busy spin-loop, ignore for now
+// async fn batch_or_timeout<A: SteadyActor>(actor: &mut A, crawler_rx: SteadyRx<FileMeta>) -> bool {
+//     loop {
+//         select! {
+//             avail = actor.wait_avail(&mut crawler_rx, BATCH_SIZE) => {
+//                 if avail {
+// 		    return true;
+//                 }
+//             },
+//             timeout = actor.wait_timeout(Duration::from_secs(5)) => {
+//                 if timeout {
+//                     return false;
+//                 }
+//             },
+//         }
+//     }
+// }
 
