@@ -14,6 +14,7 @@ TODO: log errors, and add match or .expect() for various functions
 
 ** DB MANAGER
 TODO: https://sledoview.greq.me/ download and use this for viewing database (for debugging)
+TODO: implement tuple macro for db batching and shizz
 TODO: match results for db operations
 TODO: crawler <-> DB fallback logic
 TODO: actor shutdown?
@@ -28,10 +29,6 @@ TODO: basic actor setup
 TODO: watch-list management
 TODO: write logic to edit DB if File in DB is changed
 
-** Cgroups
-TODO: learn and see how it interacts with steady-state process
-TODO: could be our silver bullet
-
 ** TUI
 TODO: list operations, write code to actually delete files given a path.
 TODO: color coding for nice output?
@@ -40,3 +37,7 @@ TODO: color coding for nice output?
 TODO: Prompt Message (Although we would get this from Crawler, and would be stored in DB)
 TODO: Create Slides, Notes, for presentations on Llama.cpp and Local LLM inference
 TODO: Write Mockup of all the models we tried and the strengths/weaknesses of different approaches.
+
+** Final Stuff
+TODO: test running for multiple days/week
+TODO: record demo video for presentation

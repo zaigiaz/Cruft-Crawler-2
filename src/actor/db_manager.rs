@@ -65,6 +65,8 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A,
 	// TODO: nested await_for_any! macro could work to with two await_for_any!
 
 
+	// need to write macro for this that returns tuple of bools representing the first returned future
+	// I.E  let completed_future = (0, 1) and then if.. else on that
 	let completed_future = await_for_any!(actor.wait_avail(&mut crawler_rx, BATCH_SIZE),
 		       actor.wait_timeout(Duration::from_secs(5))
 	);
