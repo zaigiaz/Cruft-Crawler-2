@@ -1,6 +1,11 @@
 * OVERVIEW
 I need to finish these todos over spring break
 
+TODO: user interface to correctly save to correct db location and other stuff
+NOTE: some type of system variable?
+
+
+
 * TODOS
 ** CRAWLER
 TODO: fallback logic if entire program crashes (or if files already in DB)
@@ -10,6 +15,7 @@ TODO: model prompt message string
 TODO: implement voting or consensus logic?
 TODO: (integration testing) for get_file_hash()
 TODO: (integration testing) for visit_dir()
+TODO: (integration testing) for rx and channel testing
 TODO: log errors, and add match or .expect() for various functions
 
 ** DB MANAGER
@@ -41,3 +47,24 @@ TODO: Write Mockup of all the models we tried and the strengths/weaknesses of di
 ** Final Stuff
 TODO: test running for multiple days/week
 TODO: record demo video for presentation
+
+
+
+*** old code
+// this is a busy spin-loop, ignore for now
+// async fn batch_or_timeout<A: SteadyActor>(actor: &mut A, crawler_rx: SteadyRx<FileMeta>) -> bool {
+//     loop {
+//         select! {
+// 	    avail = actor.wait_avail(&mut crawler_rx, BATCH_SIZE) => {
+//                 if avail {
+// 		    return true;
+//                 }
+//             },
+//             timeout = actor.wait_timeout(Duration::from_secs(5)) => {
+//                 if timeout {
+//                     return false;
+//                 }
+//             },
+//         }
+//     }
+// }

@@ -10,7 +10,11 @@ use std::io::Write;
 use crate::actor::crawler::FileMeta;
 use std::path::{Path, PathBuf};
 use sled::{Batch, open};
-use futures::select;
+
+// #[macro_use]
+// use crate::utils;
+
+use crate::await_for_any_flags;
 
 // TODO: add check to make sure counter is always asc order
 // NOTE: for unit testing
@@ -41,7 +45,6 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A,
     let mut crawler_rx = crawler_rx.lock().await;
 
 
-    
     // TODO: add surefire pathway to database
     // TODO: add way to get last key from db | can use .back()
     let mut db: sled::Db = sled::open("./data/db").expect("couldnt open db");
@@ -60,20 +63,16 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A,
 	let unit_cnt  = actor.avail_units(&mut crawler_rx);
 	// println!("here is {}", unit_cnt);
 
-	// TODO: might need to use this for timer-out operations
-	// TODO: steady_await_for_all { await avail, await timer} logic
-	// TODO: nested await_for_any! macro could work to with two await_for_any!
+	await_for_any!(actor.wait_avail(&mut crawler_rx, BATCH_SIZE),
+		       actor.wait_timeout(Duration::from_secs(5)));
 
 
-	// need to write macro for this that returns tuple of bools representing the first returned future
-	// I.E  let completed_future = (0, 1) and then if.. else on that
-	let completed_future = await_for_any!(actor.wait_avail(&mut crawler_rx, BATCH_SIZE),
-		       actor.wait_timeout(Duration::from_secs(5))
-	);
+	let mut completed_future = false;
+	if crawler_rx.avail_units() >= BATCH_SIZE {
+	    completed_future = true;
+	}
 
 	
-	// convert batch_size constant to i32 to work	
-	// if batch_or_timeout {
 	while loop_ctr < BATCH_SIZE as i32 { 
 
 	let recieved = actor.try_take(&mut crawler_rx);
@@ -152,22 +151,3 @@ fn write_log(WriteFile: &str, key: i32, value: FileMeta) -> Result<(), std::io::
 
     Ok(())
 }
-
-// this is a busy spin-loop, ignore for now
-// async fn batch_or_timeout<A: SteadyActor>(actor: &mut A, crawler_rx: SteadyRx<FileMeta>) -> bool {
-//     loop {
-//         select! {
-//             avail = actor.wait_avail(&mut crawler_rx, BATCH_SIZE) => {
-//                 if avail {
-// 		    return true;
-//                 }
-//             },
-//             timeout = actor.wait_timeout(Duration::from_secs(5)) => {
-//                 if timeout {
-//                     return false;
-//                 }
-//             },
-//         }
-//     }
-// }
-
