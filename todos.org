@@ -4,13 +4,10 @@ I need to finish these todos over spring break
 TODO: user interface to correctly save to correct db location and other stuff
 NOTE: some type of system variable?
 
-
-
 * TODOS
 ** CRAWLER
 TODO: fallback logic if entire program crashes (or if files already in DB)
 TODO: cleanup crate names and prune redundancies
-TODO: think about how this should work: fields, etc.
 TODO: model prompt message string
 TODO: implement voting or consensus logic?
 TODO: (integration testing) for get_file_hash()
@@ -19,6 +16,7 @@ TODO: (integration testing) for rx and channel testing
 TODO: log errors, and add match or .expect() for various functions
 
 ** DB MANAGER
+TODO: think about structure of the Crawler iterator and how interact with WAL and DB
 TODO: https://sledoview.greq.me/ download and use this for viewing database (for debugging)
 TODO: implement tuple macro for db batching and shizz
 TODO: match results for db operations

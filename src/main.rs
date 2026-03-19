@@ -8,7 +8,7 @@ pub(crate) mod actor {
     pub(crate) mod db_manager;
 }
 
-pub(crate) mod utils;
+
 
 fn main() -> Result<(), Box<dyn Error>> {
 
