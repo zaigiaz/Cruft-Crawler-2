@@ -12,11 +12,7 @@ use std::path::{Path, PathBuf};
 use sled::{Batch, open};
 use std::io::SeekFrom;
 
-// #[macro_use]
-// use crate::utils;
-
-// TODO: add check to make sure counter is always asc order
-// NOTE: for unit testing
+// NOTE: add check to make sure counter is always asc order for unit testing
 
 // TODO: use .back() to get iter for last element, then compare with write-ahead log to ensure we are at correct position
 // NOTE: addtionally I can think of this like a play-cursor or iterator, can be used in addition with inotify actor later
@@ -130,6 +126,8 @@ fn db_remove(key: i32, batch: &mut Batch) -> Result<(), Box<dyn Error>> {
 
 
 // TODO: Better write ahead logic and log cleanup (rotate log?)
+// TODO: make this a rotating log that keeps last batch in, then compare with iter and where it started
+// TODO: then just move Iter to there from Crawler?
 fn write_log(WriteFile: &str, key: i32, value: FileMeta) -> Result<(), std::io::Error> {
 
 
@@ -158,14 +156,12 @@ fn check_log(Readfile: &str) -> Result<(), std::io::Error> {
 	                       .open(Readfile)?;
 
 
-    // start at beginning of file.
-    // TODO: check entirety of WAL and DB for inconsistency
     // TODO: think about structure of the Crawler iterator and how interact with WAL and DB
+    // TODO: check entirety of WAL and DB for inconsistency
+    // start at beginning of file.
     file.seek(SeekFrom::Start(0))?;
     
-
-
-
 	Ok(())
 }
+
 

@@ -47,6 +47,47 @@ TODO: test running for multiple days/week
 TODO: record demo video for presentation
 
 
+*** Rotating Log Structure
+
+use std::fs::OpenOptions;
+use std::io::Write;
+use std::path::Path;
+
+struct RotatingLog {
+    path: String,
+    max_size: u64,
+}
+
+impl RotatingLog {
+    fn new(path: &str, max_size: u64) -> Self {
+        RotatingLog {
+            path: path.to_string(),
+            max_size,
+        }
+    }
+
+    fn write_batch(&self, batch: &[&str]) -> std::io::Result<()> {
+        let metadata = std::fs::metadata(&self.path).ok();
+        if let Some(m) = metadata {
+            if m.len() >= self.max_size {
+                let backup = format!("{}.{}", self.path, chrono::Local::now().timestamp());
+                std::fs::rename(&self.path, &backup)?;
+            }
+        }
+
+        let mut file = OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(&self.path)?;
+
+        for record in batch {
+            writeln!(file, "{}", record)?;
+        }
+        Ok(())
+    }
+}
+
+
 
 *** old code
 // this is a busy spin-loop, ignore for now
@@ -66,3 +107,4 @@ TODO: record demo video for presentation
 //         }
 //     }
 // }
+

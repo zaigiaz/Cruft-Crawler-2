@@ -18,6 +18,7 @@ use hex;
 
 // TODO: think about how this should work: fields, etc.
 pub(crate) struct CrawlerState {
+    // pub(crate) crawler_iter: Path,
     pub(crate) abs_path:  PathBuf,    
 }
 
@@ -249,7 +250,7 @@ fn test_crawler() -> Result<(), Box<dyn Error>> {
 
 
     // TODO: test visit_dir function
-
+    // test_crawl = visit_dir("test directory path")
 
     
     graph.start();
