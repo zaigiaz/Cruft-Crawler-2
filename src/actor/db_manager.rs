@@ -3,25 +3,22 @@
 #![allow(non_snake_case)]
 
 use steady_state::*;
+use crate::includes::file_utils::File_Meta;
+use crate::includes::db_utils::*;
+use crate::includes::config::*;
+
 use std::error::Error;
 use std::fs::OpenOptions;
 use std::io::prelude::*;
 use std::io::Write;
-use crate::includes::file_utils::File_Meta;
 use std::path::{Path, PathBuf};
-use sled::{Batch, open};
-use std::io::SeekFrom;
-
+use sled::Batch;
 // NOTE: add check to make sure counter is always asc order for unit testing
 
 // TODO: use .back() to get iter for last element, then compare with write-ahead log to ensure we are at correct position
 // NOTE: addtionally I can think of this like a play-cursor or iterator, can be used in addition with inotify actor later
 
 // last id we had in our state
-struct db_state {
-    db_id: i32,
-    backup_batch: Vec<File_Meta>,
-}
 
 // size of batch we want (# of File_Meta Structs before writing to DB)
 const BATCH_SIZE: usize = 10;
@@ -40,14 +37,13 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A,
 
     // TODO: add surefire pathway to database
     // TODO: add way to get last key from db | can use .back()
-    let mut db: sled::Db = sled::open("/home/zaigiaz/Programming/Cruft-Crawler-2/data/db").expect("couldnt open db");
-
-    let iter: sled::Iter;
-    let mut loop_ctr: i32 = 0;
+    let db = open_db("/home/zaigiaz/Programming/Cruft-Crawler-2/data/db");
 
     // TODO: scan db and get last key for this    
-    let mut db_id: i32 = 0;
+    let iter: sled::Iter;
 
+    let mut loop_ctr: i32 = 0;
+    let mut db_id: i32 = 0;
 
     while actor.is_running(|| crawler_rx.is_closed_and_empty()) {
 
@@ -90,78 +86,3 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A,
 
   Ok(())
 }
-
-
-// add db entry given key and value pair
-fn db_add(key: i32, value: &File_Meta, batch: &mut Batch) -> Result<(), Box<dyn Error>> {
-
-    // serialise struct into u8
-    let value_s = value.to_bytes()?;
-
-    // serialize i32 to bytes
-    let key_s = key.to_be_bytes();
-
-    batch.insert(&key_s, value_s);
-    // let _insert = db.insert(key_s, value_s)?;
-
-Ok(())
-}
-
-
-// edit db entry given key
-fn db_edit(key: i32, value: File_Meta, batch: &mut Batch) -> Result<(), Box<dyn Error>> {
-    // sled has immutable db, so we need to delete old key then insert new
-    let _ = db_remove(key, batch)?;
-    let _ = db_add(key, &value, batch)?;
-    Ok(())
-}
-
-
-// remove db entry given key
-fn db_remove(key: i32, batch: &mut Batch) -> Result<(), Box<dyn Error>> {
-    let key_s = key.to_be_bytes();   
-    batch.remove(&key_s);
-    Ok(())
-}
-
-
-// TODO: Better write ahead logic and log cleanup (rotate log?)
-// TODO: make this a rotating log that keeps last batch in, then compare with iter and where it started
-// TODO: then just move Iter to there from Crawler?
-fn write_log(WriteFile: &str, key: i32, value: File_Meta) -> Result<(), std::io::Error> {
-
-
-    let mut file = OpenOptions::new()
-        .write(true)
-        .append(true)
-        .open(WriteFile)?;
-
-    let value = value.abs_path.to_string_lossy();
-
-    writeln!(file, "{} {}", key, value).map_err(|e| {
-        eprintln!("Couldn't write to file: {}", e);
-        std::io::Error::new(std::io::ErrorKind::Other, e)
-    })?;
-
-    Ok(())
-}
-
-
-// check our WAL and then see if current batch is different from the last that was written to file
-// if so then do all operations that arent in DB and update until we reach back to current data
-fn check_log(Readfile: &str) -> Result<(), std::io::Error> {
-
-    let mut file = OpenOptions::new()
-	                       .read(true)
-	                       .open(Readfile)?;
-
-
-    // TODO: think about structure of the Crawler iterator and how interact with WAL and DB
-    // TODO: check entirety of WAL and DB for inconsistency
-    // start at beginning of file.
-    file.seek(SeekFrom::Start(0))?;
-    
-	Ok(())
-}
-
-
