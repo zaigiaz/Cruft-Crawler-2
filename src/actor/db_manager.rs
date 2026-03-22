@@ -37,7 +37,7 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A,
 
     // TODO: add surefire pathway to database
     // TODO: add way to get last key from db | can use .back()
-    let db = open_db("/home/zaigiaz/Programming/Cruft-Crawler-2/data/db");
+    let db = DbState::new("/home/zaigiaz/Programming/Cruft-Crawler-2/data/db")?;
 
     // TODO: scan db and get last key for this    
     let iter: sled::Iter;
@@ -76,7 +76,7 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A,
 	write_log("/home/zaigiaz/Programming/Cruft-Crawler-2/data/write_ahead_log.txt", db_id, msg.clone());
 
 	// I want the db to have: db_id (counter), db_hash: key is hash value of file, prompt addition message as content;
-	let _add = db_add(db_id, &msg, &mut batch);
+	let _add = DbState::db_add(&db, db_id, &msg, &mut batch);
 	}
 
 	// apply batch to db (this is atomic and prevents failure in case actor failure during operation)

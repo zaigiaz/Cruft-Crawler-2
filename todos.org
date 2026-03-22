@@ -5,7 +5,8 @@ TODO: user interface to correctly save to correct db location and other stuff
 NOTE: some type of system variable?
 
 * The Rewrite
-- Put all non-async functions in seperate files and start agreggating them into traits for easy readability and use
+- get everything tidied up into better traits / structs that make sense
+- write logic, traits for write_ahead_log, 
 - Test the testing framework and see if it works
 
 * TODOS
@@ -13,7 +14,6 @@ NOTE: some type of system variable?
 TODO: fallback logic if entire program crashes (or if files already in DB)
 TODO: cleanup crate names and prune redundancies
 TODO: model prompt message string
-TODO: implement voting or consensus logic?
 TODO: (integration testing) for get_file_hash()
 TODO: (integration testing) for visit_dir()
 TODO: (integration testing) for rx and channel testing
