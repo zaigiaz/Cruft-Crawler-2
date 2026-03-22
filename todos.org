@@ -4,6 +4,10 @@ I need to finish these todos over spring break
 TODO: user interface to correctly save to correct db location and other stuff
 NOTE: some type of system variable?
 
+* The Rewrite
+- Put all non-async functions in seperate files and start agreggating them into traits for easy readability and use
+- Test the testing framework and see if it works
+
 * TODOS
 ** CRAWLER
 TODO: fallback logic if entire program crashes (or if files already in DB)

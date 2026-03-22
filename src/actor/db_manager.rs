@@ -7,7 +7,7 @@ use std::error::Error;
 use std::fs::OpenOptions;
 use std::io::prelude::*;
 use std::io::Write;
-use crate::actor::crawler::FileMeta;
+use crate::includes::file_utils::File_Meta;
 use std::path::{Path, PathBuf};
 use sled::{Batch, open};
 use std::io::SeekFrom;
@@ -20,27 +20,27 @@ use std::io::SeekFrom;
 // last id we had in our state
 struct db_state {
     db_id: i32,
-    backup_batch: Vec<FileMeta>,
+    backup_batch: Vec<File_Meta>,
 }
 
-// size of batch we want (# of FileMeta Structs before writing to DB)
+// size of batch we want (# of File_Meta Structs before writing to DB)
 const BATCH_SIZE: usize = 10;
 
 pub async fn run(actor: SteadyActorShadow, 
-                 crawler_rx: SteadyRx<FileMeta> ) -> Result<(),Box<dyn Error>> {
+                 crawler_rx: SteadyRx<File_Meta> ) -> Result<(),Box<dyn Error>> {
 
     internal_behavior(actor.into_spotlight([&crawler_rx], []), crawler_rx).await
 }
 
 
 async fn internal_behavior<A: SteadyActor>(mut actor: A,
-                                           crawler_rx: SteadyRx<FileMeta>) -> Result<(),Box<dyn Error>> {
+                                           crawler_rx: SteadyRx<File_Meta>) -> Result<(),Box<dyn Error>> {
 
     let mut crawler_rx = crawler_rx.lock().await;
 
     // TODO: add surefire pathway to database
     // TODO: add way to get last key from db | can use .back()
-    let mut db: sled::Db = sled::open("./data/db").expect("couldnt open db");
+    let mut db: sled::Db = sled::open("/home/zaigiaz/Programming/Cruft-Crawler-2/data/db").expect("couldnt open db");
 
     let iter: sled::Iter;
     let mut loop_ctr: i32 = 0;
@@ -68,7 +68,7 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A,
 	while loop_ctr < batch_size as i32 { 
 
 	let recieved = actor.try_take(&mut crawler_rx);
-	let msg = recieved.expect("expected FileMeta Struct (crawler -> db_actor)");
+	let msg = recieved.expect("expected File_Meta Struct (crawler -> db_actor)");
 	msg.meta_print();
 
 
@@ -77,7 +77,7 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A,
 	loop_ctr += 1;
 	db_id    += 1;
 
-	write_log("./data/write_ahead_log.txt", db_id, msg.clone());
+	write_log("/home/zaigiaz/Programming/Cruft-Crawler-2/data/write_ahead_log.txt", db_id, msg.clone());
 
 	// I want the db to have: db_id (counter), db_hash: key is hash value of file, prompt addition message as content;
 	let _add = db_add(db_id, &msg, &mut batch);
@@ -93,7 +93,7 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A,
 
 
 // add db entry given key and value pair
-fn db_add(key: i32, value: &FileMeta, batch: &mut Batch) -> Result<(), Box<dyn Error>> {
+fn db_add(key: i32, value: &File_Meta, batch: &mut Batch) -> Result<(), Box<dyn Error>> {
 
     // serialise struct into u8
     let value_s = value.to_bytes()?;
@@ -109,7 +109,7 @@ Ok(())
 
 
 // edit db entry given key
-fn db_edit(key: i32, value: FileMeta, batch: &mut Batch) -> Result<(), Box<dyn Error>> {
+fn db_edit(key: i32, value: File_Meta, batch: &mut Batch) -> Result<(), Box<dyn Error>> {
     // sled has immutable db, so we need to delete old key then insert new
     let _ = db_remove(key, batch)?;
     let _ = db_add(key, &value, batch)?;
@@ -128,7 +128,7 @@ fn db_remove(key: i32, batch: &mut Batch) -> Result<(), Box<dyn Error>> {
 // TODO: Better write ahead logic and log cleanup (rotate log?)
 // TODO: make this a rotating log that keeps last batch in, then compare with iter and where it started
 // TODO: then just move Iter to there from Crawler?
-fn write_log(WriteFile: &str, key: i32, value: FileMeta) -> Result<(), std::io::Error> {
+fn write_log(WriteFile: &str, key: i32, value: File_Meta) -> Result<(), std::io::Error> {
 
 
     let mut file = OpenOptions::new()
