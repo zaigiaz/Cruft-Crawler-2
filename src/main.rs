@@ -12,6 +12,7 @@ pub(crate) mod includes {
     pub(crate) mod file_utils;
     pub(crate) mod config;
     pub(crate) mod db_utils;
+    pub(crate) mod write_ahead_log;
 }
 
 fn main() -> Result<(), Box<dyn Error>> {

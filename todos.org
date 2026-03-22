@@ -5,8 +5,9 @@ TODO: user interface to correctly save to correct db location and other stuff
 NOTE: some type of system variable?
 
 * The Rewrite
-- get everything tidied up into better traits / structs that make sense
 - write logic, traits for write_ahead_log, 
+- make sure to add the lock() method to make sure wal is consistent
+- Organize file_utils crate, make better struct/crate
 - Test the testing framework and see if it works
 
 * TODOS
@@ -22,7 +23,6 @@ TODO: log errors, and add match or .expect() for various functions
 ** DB MANAGER
 TODO: think about structure of the Crawler iterator and how interact with WAL and DB
 TODO: https://sledoview.greq.me/ download and use this for viewing database (for debugging)
-TODO: implement tuple macro for db batching and shizz
 TODO: match results for db operations
 TODO: crawler <-> DB fallback logic
 TODO: actor shutdown?
