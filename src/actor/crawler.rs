@@ -5,7 +5,9 @@ use steady_state::*;
 use std::path::{Path, PathBuf};
 use std::io::prelude::*;
 use std::error::Error;
+
 use crate::includes::file_utils::*;
+use crate::includes::write_ahead_log::*;
 
 // TODO: fallback logic if entire program crashes (or if files already in DB)
 // TODO: cleanup crate names and prune redundancies
@@ -40,9 +42,9 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<Fi
 
     // TODO: replace this with config file or setup at command line
     // let search_path = read_config();
-    let path1 = Path::new("/home/zaigiaz/Programming/Cruft-Crawler-2/src/");
+    let crawl_path = Path::new("/home/zaigiaz/Programming/Cruft-Crawler-2/src/test_directory/another/");
 
-    let vec_metadata: Vec<File_Meta> = visit_dir(path1, &mut state)?;
+    let vec_metadata: Vec<File_Meta> = visit_dir(crawl_path, &mut state)?;
     
     // ai model code was sending here
 

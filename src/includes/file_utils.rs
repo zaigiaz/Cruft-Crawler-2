@@ -74,10 +74,11 @@ pub fn visit_dir(dir: &Path,
 	                             .to_path_buf();
 
 	// NOTE: update state to reflect last crawled entry
-	// NOTE: could use DirEntry or another concept instead
 	state.abs_path = abs_path.clone();
+
+	// new function here for metadata
 	
- 
+	 
 	let name_os: &OsStr = entry.file_name();
 	let file_name: String = match name_os.to_str() {
             Some(s) => s.to_owned(),

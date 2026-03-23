@@ -2,11 +2,14 @@
 I need to finish these todos over spring break
 
 TODO: user interface to correctly save to correct db location and other stuff
-NOTE: some type of system variable?
+NOTE: some type of system variable? for paths and everything
 
-* The Rewrite
+** The Rewrite
 - write logic, traits for write_ahead_log, 
 - make sure to add the lock() method to make sure wal is consistent
+- add check size, so we rotate the log after certain amount of bytes
+- maybe also write string as bytes for faster write time?
+
 - Organize file_utils crate, make better struct/crate
 - Test the testing framework and see if it works
 
@@ -40,6 +43,7 @@ TODO: write logic to edit DB if File in DB is changed
 ** TUI
 TODO: list operations, write code to actually delete files given a path.
 TODO: color coding for nice output?
+TODO: user prompt for which directory, etc.
 
 ** AI
 TODO: Prompt Message (Although we would get this from Crawler, and would be stored in DB)

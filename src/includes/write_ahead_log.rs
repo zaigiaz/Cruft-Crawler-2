@@ -1,10 +1,7 @@
 use crate::includes::file_utils::File_Meta;
-
-use std::fs::File;
+use std::io::{Seek, SeekFrom};
 use std::fs::OpenOptions;
-use std::error::Error;
 use std::io::Write;
-use std::path::Path;
 
 struct RotatingLog {
     path: String,
@@ -12,38 +9,44 @@ struct RotatingLog {
 }
 
 impl RotatingLog {
+    
+    /// write the last path that was crawled by the crawler iterator and save to log file
+    pub fn write_log(WriteFile: &str, last_iter: &str) -> Result<(), std::io::Error> {
 
-    /// initialize and open the write_ahead_log
-    fn new(path: &str, max_size: u64) -> Self {
-        RotatingLog {
-            path: path.to_string(),
-            max_size,
-        }
+	let mut file = OpenOptions::new()
+            .write(true)
+            .append(true)
+            .open(WriteFile)?;
+
+	writeln!(file, "{}", last_iter).map_err(|e| {
+            eprintln!("Couldn't write to file: {}", e);
+            std::io::Error::new(std::io::ErrorKind::Other, e)
+	})?;
+
+	Ok(())
     }
 
-    // /// write a batch to the file, this is to maintain data integrity with the database
-    // fn write_batch(&self, batch: Vec<File_Meta>) -> std::io::Result<()> {
-    // 	let file = OpenOptions::new()
-    //         .read(true)
-    //         .write(true)
-    //         .create(true)
-    //         .open(self.path);
 
-    // 	while !batch.is_empty() {
-    // 	    file.write_all
-	    
-    // 	}
+    /// check our WAL and then see if current batch is different from the last that was written to file
+    /// if so then do all operations that arent in DB and update until we reach back to current data
+    pub fn check_log(Readfile: &str) -> Result<(), std::io::Error> {
 
-    // }
+	let mut file = OpenOptions::new()
+	    .read(true)
+	    .open(Readfile)?;
 
-    // /// rotate the log file (delete the last entry)
-    // fn rotate_batch(&self) -> Result<Self, Box<dyn Error>> {
+	// seek end of file, then compare to end of DB
+	file.seek(SeekFrom::Start(0))?;
 	
-    // }
+	Ok(())
+    }
 
-    // /// close the file handle
-    // fn close_file(&self) -> Result<Self, Box<dyn Error>> {
-	
-    // }
+
+    
+    pub fn rotate_log() -> Result<(), std::io::Error> {
+	println!("delete the log after 10kb here");
+
+	Ok(())
+    }
 
 }

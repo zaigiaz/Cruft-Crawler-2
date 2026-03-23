@@ -5,7 +5,7 @@
 use steady_state::*;
 use crate::includes::file_utils::File_Meta;
 use crate::includes::db_utils::*;
-use crate::includes::config::*;
+
 
 use std::error::Error;
 use std::fs::OpenOptions;
@@ -72,9 +72,7 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A,
 	// to reduce context window by reprompting and wiping past history in LLM
 	loop_ctr += 1;
 	db_id    += 1;
-
-	write_log("/home/zaigiaz/Programming/Cruft-Crawler-2/data/write_ahead_log.txt", db_id, msg.clone());
-
+	 
 	// I want the db to have: db_id (counter), db_hash: key is hash value of file, prompt addition message as content;
 	let _add = DbState::db_add(&db, db_id, &msg, &mut batch);
 	}

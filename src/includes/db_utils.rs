@@ -10,7 +10,7 @@ use std::io::SeekFrom;
 /// State of our Sled Database containing the current open Database, and a backup batch in case of actor failure
 pub struct DbState {
     backup_batch: Vec<File_Meta>,
-    Db: sled::Db,
+    database: sled::Db,
 }
 
 
@@ -23,7 +23,7 @@ impl DbState {
 
         Ok(DbState {
             backup_batch: Vec::new(),
-            Db: db,
+            database: db,
         })
     }
 
@@ -62,7 +62,7 @@ impl DbState {
 
     /// Flush the batch to the database
     pub fn apply_batch(&self, batch: Batch) -> Result<(), Box<dyn Error>> {
-        self.Db.apply_batch(batch)?;
+        self.database.apply_batch(batch)?;
         Ok(())
     }
 
