@@ -1,22 +1,22 @@
 use crate::includes::file_utils::File_Meta;
 use std::io::{Seek, SeekFrom};
-use std::fs::OpenOptions;
+use std::fs::{OpenOptions, write};
 use std::io::Write;
 
-struct RotatingLog {
-    path: String,
+struct RotatingLog<'a> {
+    path: &'a str,
     max_size: u64,
 }
 
-impl RotatingLog {
+impl RotatingLog<'_> {
     
     /// write the last path that was crawled by the crawler iterator and save to log file
-    pub fn write_log(WriteFile: &str, last_iter: &str) -> Result<(), std::io::Error> {
+    pub fn write_log(&self, last_iter: &str) -> Result<(), std::io::Error> {
 
 	let mut file = OpenOptions::new()
             .write(true)
             .append(true)
-            .open(WriteFile)?;
+            .open(self.path)?;
 
 	writeln!(file, "{}", last_iter).map_err(|e| {
             eprintln!("Couldn't write to file: {}", e);
@@ -29,11 +29,11 @@ impl RotatingLog {
 
     /// check our WAL and then see if current batch is different from the last that was written to file
     /// if so then do all operations that arent in DB and update until we reach back to current data
-    pub fn check_log(Readfile: &str) -> Result<(), std::io::Error> {
+    pub fn check_log(&self) -> Result<(), std::io::Error> {
 
 	let mut file = OpenOptions::new()
 	    .read(true)
-	    .open(Readfile)?;
+	    .open(self.path)?;
 
 	// seek end of file, then compare to end of DB
 	file.seek(SeekFrom::Start(0))?;
@@ -42,9 +42,14 @@ impl RotatingLog {
     }
 
 
-    
-    pub fn rotate_log() -> Result<(), std::io::Error> {
-	println!("delete the log after 10kb here");
+    /// when file exceeds some max size, we clear it to save memory
+    pub fn rotate_log(&mut self) -> Result<(), std::io::Error> {
+	let metadata = std::fs::metadata(&self.path)?;
+
+	// overwrite previous content of file with empty string
+	if metadata.len() >= self.max_size {
+	    std::fs::write(self.path, b"")?;
+	}
 
 	Ok(())
     }

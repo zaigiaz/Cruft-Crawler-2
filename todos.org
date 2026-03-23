@@ -1,16 +1,15 @@
 * OVERVIEW
 I need to finish these todos over spring break
 
-TODO: user interface to correctly save to correct db location and other stuff
-NOTE: some type of system variable? for paths and everything
-
 ** The Rewrite
-- write logic, traits for write_ahead_log, 
 - make sure to add the lock() method to make sure wal is consistent
-- add check size, so we rotate the log after certain amount of bytes
 - maybe also write string as bytes for faster write time?
 
+- user interface to correctly save to correct db location and other stuff
+- some type of system variable? for paths and everything
+
 - Organize file_utils crate, make better struct/crate
+- create new struct and impl for all the file utils function
 - Test the testing framework and see if it works
 
 * TODOS

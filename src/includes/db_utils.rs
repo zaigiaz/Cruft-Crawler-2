@@ -13,7 +13,6 @@ pub struct DbState {
     database: sled::Db,
 }
 
-
 impl DbState {
 
     /// initialize and open the database

@@ -12,13 +12,12 @@ use crate::includes::write_ahead_log::*;
 // TODO: fallback logic if entire program crashes (or if files already in DB)
 // TODO: cleanup crate names and prune redundancies
 
-// TODO: think about how this should work: fields, etc.
+/// holds last path visited of crawler actor
 pub(crate) struct CrawlerState {
-    // pub(crate) crawler_iter: Path,
     pub(crate) abs_path:  PathBuf,    
 }
 
-// run function 
+/// run function for crawler actor
 pub async fn run(actor: SteadyActorShadow, crawler_tx: SteadyTx<File_Meta>, 
                  state: SteadyState<CrawlerState>) -> Result<(),Box<dyn Error>> {
 
@@ -32,7 +31,7 @@ pub async fn run(actor: SteadyActorShadow, crawler_tx: SteadyTx<File_Meta>,
 }
 
 
-// Internal behaviour for the actor
+/// Internal behaviour for the crawler actor
 async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<File_Meta>,
                                            state: SteadyState<CrawlerState>) -> Result<(),Box<dyn Error>> {
 
@@ -65,7 +64,7 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<Fi
 }
 
 
-// TODO: finish unit testing for crawler
+/// Testing for the crawler actor
 #[cfg(test)]
 pub(crate) mod crawler_tests {
 

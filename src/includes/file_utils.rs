@@ -1,4 +1,3 @@
-
 use steady_state::StateGuard;
 use std::io::prelude::*;
 use walkdir::WalkDir;
