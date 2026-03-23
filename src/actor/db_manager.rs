@@ -3,7 +3,7 @@
 #![allow(non_snake_case)]
 
 use steady_state::*;
-use crate::includes::file_utils::File_Meta;
+use crate::includes::file_utils::FileMetadata;
 use crate::includes::db_utils::*;
 
 
@@ -24,14 +24,14 @@ use sled::Batch;
 const BATCH_SIZE: usize = 10;
 
 pub async fn run(actor: SteadyActorShadow, 
-                 crawler_rx: SteadyRx<File_Meta> ) -> Result<(),Box<dyn Error>> {
+                 crawler_rx: SteadyRx<FileMetadata> ) -> Result<(),Box<dyn Error>> {
 
     internal_behavior(actor.into_spotlight([&crawler_rx], []), crawler_rx).await
 }
 
 
 async fn internal_behavior<A: SteadyActor>(mut actor: A,
-                                           crawler_rx: SteadyRx<File_Meta>) -> Result<(),Box<dyn Error>> {
+                                           crawler_rx: SteadyRx<FileMetadata>) -> Result<(),Box<dyn Error>> {
 
     let mut crawler_rx = crawler_rx.lock().await;
 
@@ -65,7 +65,11 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A,
 
 	let recieved = actor.try_take(&mut crawler_rx);
 	let msg = recieved.expect("expected File_Meta Struct (crawler -> db_actor)");
-	msg.meta_print();
+
+
+	    // ------------------------------
+	    // TODO :: print FileMetadata struct here
+	    // ------------------------------
 
 
 	// NOTE: db_loop counter could also be used to check how many prompts we have given to the LLM so far,

@@ -1,4 +1,4 @@
-use crate::includes::file_utils::File_Meta;
+use crate::includes::file_utils::FileMetadata;
 use std::error::Error;
 use std::fs::OpenOptions;
 use std::io::prelude::*;
@@ -9,9 +9,14 @@ use std::io::SeekFrom;
 
 /// State of our Sled Database containing the current open Database, and a backup batch in case of actor failure
 pub struct DbState {
-    backup_batch: Vec<File_Meta>,
+    backup_batch: Vec<FileMetadata>,
     database: sled::Db,
 }
+
+// ------------------------------
+// TODO :: implement either hashing for FileMetadata struct or redo db logic
+// NOTE :: {hash, prompt string}: kv pair?
+// ------------------------------
 
 impl DbState {
 
@@ -28,7 +33,7 @@ impl DbState {
 
 
     /// add db entry given key and value pair
-    pub fn db_add(&self, key: i32, value: &File_Meta, batch: &mut Batch) -> Result<(), Box<dyn Error>> {
+    pub fn db_add(&self, key: i32, value: &FileMetadata, batch: &mut Batch) -> Result<(), Box<dyn Error>> {
 
 	// serialise struct into u8
 	let value_s = value.to_bytes()?;
@@ -52,7 +57,7 @@ impl DbState {
 
 
     /// edit db entry given key
-    pub fn db_edit(&self, key: i32, value: File_Meta, batch: &mut Batch) -> Result<(), Box<dyn Error>> {
+    pub fn db_edit(&self, key: i32, value: FileMetadata, batch: &mut Batch) -> Result<(), Box<dyn Error>> {
 	// sled has immutable db, so we need to delete old key then insert new
 	self.db_remove(key, batch)?;
 	self.db_add(key, &value, batch)?;

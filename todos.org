@@ -6,16 +6,17 @@ I need to finish these todos over spring break
 - maybe also write string as bytes for faster write time?
 
 - user interface to correctly save to correct db location and other stuff
-- some type of system variable? for paths and everything
+- some type of system variable? for paths and everything std::env
 
-- Organize file_utils crate, make better struct/crate
-- create new struct and impl for all the file utils function
+- implement get_dir_hash(),
+- printing for FileMetadata Struct
+
+- Re-think again DB structure (UUID, or something else?)
+
 - Test the testing framework and see if it works
 
 * TODOS
 ** CRAWLER
-TODO: fallback logic if entire program crashes (or if files already in DB)
-TODO: cleanup crate names and prune redundancies
 TODO: model prompt message string
 TODO: (integration testing) for get_file_hash()
 TODO: (integration testing) for visit_dir()
@@ -23,7 +24,6 @@ TODO: (integration testing) for rx and channel testing
 TODO: log errors, and add match or .expect() for various functions
 
 ** DB MANAGER
-TODO: think about structure of the Crawler iterator and how interact with WAL and DB
 TODO: https://sledoview.greq.me/ download and use this for viewing database (for debugging)
 TODO: match results for db operations
 TODO: crawler <-> DB fallback logic
@@ -52,66 +52,3 @@ TODO: Write Mockup of all the models we tried and the strengths/weaknesses of di
 ** Final Stuff
 TODO: test running for multiple days/week
 TODO: record demo video for presentation
-
-
-*** Rotating Log Structure
-
-use std::fs::OpenOptions;
-use std::io::Write;
-use std::path::Path;
-
-struct RotatingLog {
-    path: String,
-    max_size: u64,
-}
-
-impl RotatingLog {
-    fn new(path: &str, max_size: u64) -> Self {
-        RotatingLog {
-            path: path.to_string(),
-            max_size,
-        }
-    }
-
-    fn write_batch(&self, batch: &[&str]) -> std::io::Result<()> {
-        let metadata = std::fs::metadata(&self.path).ok();
-        if let Some(m) = metadata {
-            if m.len() >= self.max_size {
-                let backup = format!("{}.{}", self.path, chrono::Local::now().timestamp());
-                std::fs::rename(&self.path, &backup)?;
-            }
-        }
-
-        let mut file = OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(&self.path)?;
-
-        for record in batch {
-            writeln!(file, "{}", record)?;
-        }
-        Ok(())
-    }
-}
-
-
-
-*** old code
-// this is a busy spin-loop, ignore for now
-// async fn batch_or_timeout<A: SteadyActor>(actor: &mut A, crawler_rx: SteadyRx<FileMeta>) -> bool {
-//     loop {
-//         select! {
-// 	    avail = actor.wait_avail(&mut crawler_rx, BATCH_SIZE) => {
-//                 if avail {
-// 		    return true;
-//                 }
-//             },
-//             timeout = actor.wait_timeout(Duration::from_secs(5)) => {
-//                 if timeout {
-//                     return false;
-//                 }
-//             },
-//         }
-//     }
-// }
-

@@ -14,11 +14,11 @@ use crate::includes::write_ahead_log::*;
 
 /// holds last path visited of crawler actor
 pub(crate) struct CrawlerState {
-    pub(crate) abs_path:  PathBuf,    
+    pub(crate) abs_path:  String,    
 }
 
 /// run function for crawler actor
-pub async fn run(actor: SteadyActorShadow, crawler_tx: SteadyTx<File_Meta>, 
+pub async fn run(actor: SteadyActorShadow, crawler_tx: SteadyTx<FileMetadata>, 
                  state: SteadyState<CrawlerState>) -> Result<(),Box<dyn Error>> {
 
     let actor = actor.into_spotlight([], [&crawler_tx]);
@@ -32,18 +32,18 @@ pub async fn run(actor: SteadyActorShadow, crawler_tx: SteadyTx<File_Meta>,
 
 
 /// Internal behaviour for the crawler actor
-async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<File_Meta>,
+async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<FileMetadata>,
                                            state: SteadyState<CrawlerState>) -> Result<(),Box<dyn Error>> {
 
     // lock state and tx channel
-    let mut state = state.lock(|| CrawlerState{abs_path: PathBuf::new()}).await;
+    let mut state = state.lock(|| CrawlerState{abs_path: String::new()}).await;
     let mut crawler_tx = crawler_tx.lock().await;
 
     // TODO: replace this with config file or setup at command line
     // let search_path = read_config();
     let crawl_path = Path::new("/home/zaigiaz/Programming/Cruft-Crawler-2/src/test_directory/another/");
 
-    let vec_metadata: Vec<File_Meta> = visit_dir(crawl_path, &mut state)?;
+    let vec_metadata: Vec<FileMetadata> = visit_dir(crawl_path, &mut state)?;
     
     // ai model code was sending here
 

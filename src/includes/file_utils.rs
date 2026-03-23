@@ -12,8 +12,19 @@ use hex;
 
 use crate::actor::crawler::CrawlerState;
 
+
+// new struct for everything
+#[derive(Debug, Clone)]
+pub struct FileMetadata {
+    pub file_path: String,
+    pub hash:      String,
+    pub modified:  i64,
+    pub created:   i64,
+    pub metadata:  std::fs::Metadata,
+}
+
+
 // metadata struct
-#[allow(nonstandard_style)]
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub(crate) struct File_Meta {
     pub abs_path:  PathBuf,
@@ -58,9 +69,9 @@ impl File_Meta {
 // also updates state per every entry
 // TODO: integration testing for visit_dir()
 pub fn visit_dir(dir: &Path,
-                 state: &mut StateGuard<'_, CrawlerState> ) -> Result<Vec<File_Meta>, Box<dyn Error>> {
+                 state: &mut StateGuard<'_, CrawlerState> ) -> Result<Vec<FileMetadata>, Box<dyn Error>> {
 
-    let mut metas: Vec<File_Meta> = Vec::new();
+    let mut metas: Vec<FileMetadata> = Vec::new();
 
     let walker = WalkDir::new(dir).into_iter();
 
@@ -69,15 +80,11 @@ pub fn visit_dir(dir: &Path,
 
         let entry = entry_res?;
 
-        let abs_path: PathBuf = entry.path()
-	                             .to_path_buf();
+        let abs_path: String = entry.path()
+	                     .to_path_buf().to_string_lossy().to_string();
 
-	// NOTE: update state to reflect last crawled entry
 	state.abs_path = abs_path.clone();
-
-	// new function here for metadata
-	
-	 
+		 
 	let name_os: &OsStr = entry.file_name();
 	let file_name: String = match name_os.to_str() {
             Some(s) => s.to_owned(),
@@ -88,26 +95,20 @@ pub fn visit_dir(dir: &Path,
         // Try to get metadata; if failing for a specific entry, skip it but continue
         match entry.metadata() {
             Ok(md) => {
-                let is_file:  bool   = md.is_file();
-                let size:     u64    = md.len();
                 let modified: i64    = FileTime::from_last_modification_time(&md).seconds();
                 let created:  i64    = FileTime::from_creation_time(&md).expect("created file time").seconds();
-                let readonly: bool   = md.permissions().readonly();
 		let mut hash: String = String::new();
 
-		if is_file {
+		if md.is_file() {
 		hash = get_file_hash(abs_path.clone()).expect("didn't get hash value");
-		}
+		} else { hash = String::from(" "); }
 
-                metas.push(File_Meta {
-		    abs_path,
-                    file_name,
-		    hash, 
-                    is_file,
-                    size,
-                    modified, 
-                    created,
-                    readonly,
+                metas.push(FileMetadata {
+		     file_path: abs_path,
+		     hash:      hash,
+		     modified:  modified,
+		     created:   created,
+		     metadata:  md,		    
                 });
             }
             Err(e) => {
@@ -137,7 +138,7 @@ fn our_filter(entry: &DirEntry) -> bool {
 
 // Read first 1024 bytes of file then hash, note that this hashes the bytes, not a string from the file
 // TODO: double check that hashing bytes is correct (integration testing) for get_file_hash()
-pub fn get_file_hash(file_name: PathBuf) -> Result<String, Box<dyn Error>> {
+pub fn get_file_hash(file_name: String) -> Result<String, Box<dyn Error>> {
 
     let mut file = std::fs::File::open(file_name)?;
 
@@ -161,3 +162,9 @@ pub fn get_file_hash(file_name: PathBuf) -> Result<String, Box<dyn Error>> {
     
     Ok(final_value.to_string())
 }
+
+
+// takes in a file and returns the metadata struct for it
+// fn get_file_metadata() -> {
+    
+// }
