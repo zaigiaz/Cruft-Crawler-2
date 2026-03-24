@@ -1,5 +1,3 @@
-#![allow(unused)]
-
 use steady_state::*;
 
 use std::path::{Path, PathBuf};
@@ -9,8 +7,6 @@ use std::error::Error;
 use crate::includes::file_utils::*;
 use crate::includes::write_ahead_log::*;
 
-// TODO: fallback logic if entire program crashes (or if files already in DB)
-// TODO: cleanup crate names and prune redundancies
 
 /// holds last path visited of crawler actor
 pub(crate) struct CrawlerState {
@@ -32,6 +28,9 @@ pub async fn run(actor: SteadyActorShadow, crawler_tx: SteadyTx<FileMetadata>,
 
 
 /// Internal behaviour for the crawler actor
+/// ------------------------------
+/// TODO :: crawler state lock update when crawling
+/// ------------------------------
 async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<FileMetadata>,
                                            state: SteadyState<CrawlerState>) -> Result<(),Box<dyn Error>> {
 
@@ -41,25 +40,33 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<Fi
 
     // TODO: replace this with config file or setup at command line
     // let search_path = read_config();
-    let crawl_path = Path::new("/home/zaigiaz/Programming/Cruft-Crawler-2/src/test_directory/another/");
+    let crawl_path = Path::new("/home/zaigiaz/Programming/Cruft-Crawler-2/src/test_directory/another/");    
 
-    let vec_metadata: Vec<FileMetadata> = visit_dir(crawl_path, &mut state)?;
-    
-    // ai model code was sending here
-
+    let write_ahead_log = RotatingLog {
+	path: "/home/zaigiaz/Programming/Cruft-Crawler-2/data/write_ahead_log.txt",
+	max_size: 1024 * 10,
+    };
+        
     while actor.is_running(|| crawler_tx.mark_closed()) {
 
-	actor.wait_vacant(&mut crawler_tx, 1).await;
+	let walker = walkdir::WalkDir::new(crawl_path).into_iter();
 
-	for m in &vec_metadata {
-	    let message = m.clone();	  
-	    actor.try_send(&mut crawler_tx, message).expect("couldn't send to DB");
+	// Read the directory (non-recursive)
+	for entry_res in walker.filter_entry(|e| !our_filter(e)) {
+
+            let entry = entry_res?;
+	    
+	    let new_metadata = get_file_metadata(entry)?;
+	    
+	    new_metadata.meta_print();
+	    actor.wait_vacant(&mut crawler_tx, 1).await;
+	    
+	    actor.try_send(&mut crawler_tx, new_metadata).expect("couldn't send to DB");
 	}
 
 	// TODO: implement voting or consensus logic	
 	actor.request_shutdown().await;
     }
-
 	return Ok(());
 }
 

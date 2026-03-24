@@ -10,10 +10,22 @@ I need to finish these todos over spring break
 
 - implement get_dir_hash(),
 - printing for FileMetadata Struct
-
-- Re-think again DB structure (UUID, or something else?)
-
 - Test the testing framework and see if it works
+
+** new sled schema
+**Use two separate Sled trees:**
+
+    Tree 1 (file_paths): Key = file path → Value = file content hash + metadata
+    Tree 2 (content_hashes): Key = content hash → Value = list of file paths that have this content
+
+This gives you:
+
+    O(1) lookup by path when inotify fires
+    O(1) duplicate detection by checking the hash tree
+    O(1) finding all duplicates of a given file
+
+When a file changes, you update Tree 1 with the new hash and metadata, then update Tree 2 to track which paths share that hash.
+
 
 * TODOS
 ** CRAWLER

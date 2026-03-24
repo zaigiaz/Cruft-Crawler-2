@@ -3,7 +3,7 @@
 
 use steady_state::*;
 use std::time::Duration;
-use crate::includes::file_utils::File_Meta;
+use crate::includes::file_utils::FileMetadata;
 
 // crate that adds in both the actors from the actor/ directory
 pub(crate) mod actor {  

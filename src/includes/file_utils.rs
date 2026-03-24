@@ -1,7 +1,6 @@
 use steady_state::StateGuard;
 use std::io::prelude::*;
-use walkdir::WalkDir;
-use walkdir::DirEntry;
+use walkdir::{WalkDir,DirEntry, IntoIter};
 use std::ffi::OsStr;
 use filetime::FileTime;
 use std::path::{Path, PathBuf};
@@ -13,21 +12,10 @@ use hex;
 use crate::actor::crawler::CrawlerState;
 
 
-// new struct for everything
-#[derive(Debug, Clone)]
-pub struct FileMetadata {
-    pub file_path: String,
-    pub hash:      String,
-    pub modified:  i64,
-    pub created:   i64,
-    pub metadata:  std::fs::Metadata,
-}
-
-
-// metadata struct
+/// metadata struct for all the variables to make decisions with
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
-pub(crate) struct File_Meta {
-    pub abs_path:  PathBuf,
+pub(crate) struct FileMetadata {
+    pub abs_path:  String,
     pub file_name: String,
     pub hash:      String,
     pub is_file:   bool,
@@ -37,8 +25,8 @@ pub(crate) struct File_Meta {
     pub readonly:  bool,
 } 
 
-impl File_Meta {
-// for easy debugging of struct if needed
+impl FileMetadata {
+    /// for easy debugging of struct if needed
    pub fn meta_print(&self) {
         println!("\n--------------------");
 	println!("Absolute_Path: {:?}", self.abs_path);
@@ -46,83 +34,69 @@ impl File_Meta {
 	println!("hash: {}",            self.hash);
 	println!("is_file: {}",         self.is_file);
 	println!("size: {}",            self.size);
-	println!("modified: {}",        self.modified / 60);
-	println!("created: {}",         self.created / 60);
+	println!("modified: {}",        self.modified);
+	println!("created: {}",         self.created);
 	println!("read-only: {}",       self.readonly);
         println!("--------------------");
     }
 
-    // serialize into bytes using bincode
+    /// serialize into bytes using bincode
     pub fn to_bytes(&self) -> Result<Vec<u8>, Box<dyn Error>> {
 	Ok(serde_cbor::to_vec(self)?)
     }
 
-    // deserialize from bytes using bincode
-    #[allow(dead_code)]
+    /// deserialize from bytes using bincode
     pub fn from_bytes(bytes: &[u8]) -> Result<Self, Box<dyn Error>> {
 	Ok(serde_cbor::from_slice(bytes)?)
     }
 }
 
 
-// function to visit test directory and return metadata of each file and insert into metadata struct
-// also updates state per every entry
-// TODO: integration testing for visit_dir()
-pub fn visit_dir(dir: &Path,
-                 state: &mut StateGuard<'_, CrawlerState> ) -> Result<Vec<FileMetadata>, Box<dyn Error>> {
 
-    let mut metas: Vec<FileMetadata> = Vec::new();
+/// takes in a Walkdir Iterator and returns the filtered metadata struct for it
+pub fn get_file_metadata(entry: DirEntry) -> Result<FileMetadata, Box<dyn Error>> {
 
-    let walker = WalkDir::new(dir).into_iter();
+    let abs_path: String = entry.path()
+	.to_path_buf().to_string_lossy().to_string();
 
-    // Read the directory (non-recursive)
-    for entry_res in walker.filter_entry(|e| !our_filter(e)) {
+    // state.abs_path = abs_path.clone();
+    
+    let name_os: &OsStr = entry.file_name();
+    let file_name: String = match name_os.to_str() {
+	Some(s) => s.to_owned(),
+	None => name_os.to_string_lossy().into_owned(),
+    };
+    
+    let meta = entry.metadata()?;
 
-        let entry = entry_res?;
+    let is_file:  bool   = meta.is_file();
+    let size:     u64    = meta.len();
+    let modified: i64    = FileTime::from_last_modification_time(&meta).seconds() / 60;
+    let created:  i64    = FileTime::from_creation_time(&meta).expect("created file time").seconds() / 60;
+    let readonly: bool   = meta.permissions().readonly();
+    let mut hash: String = String::new();
 
-        let abs_path: String = entry.path()
-	                     .to_path_buf().to_string_lossy().to_string();
+    if meta.is_file() {
+	hash = get_file_hash(abs_path.clone()).expect("didn't get hash value");
+    } else { hash = String::from(""); }
+    
+    let new_meta = FileMetadata {
+	abs_path,
+        file_name,
+	hash, 
+        is_file,
+        size,
+        modified, 
+        created,
+        readonly,
+    };
 
-	state.abs_path = abs_path.clone();
-		 
-	let name_os: &OsStr = entry.file_name();
-	let file_name: String = match name_os.to_str() {
-            Some(s) => s.to_owned(),
-            None => name_os.to_string_lossy().into_owned(),
-        };
-
-	
-        // Try to get metadata; if failing for a specific entry, skip it but continue
-        match entry.metadata() {
-            Ok(md) => {
-                let modified: i64    = FileTime::from_last_modification_time(&md).seconds();
-                let created:  i64    = FileTime::from_creation_time(&md).expect("created file time").seconds();
-		let mut hash: String = String::new();
-
-		if md.is_file() {
-		hash = get_file_hash(abs_path.clone()).expect("didn't get hash value");
-		} else { hash = String::from(" "); }
-
-                metas.push(FileMetadata {
-		     file_path: abs_path,
-		     hash:      hash,
-		     modified:  modified,
-		     created:   created,
-		     metadata:  md,		    
-                });
-            }
-            Err(e) => {
-		// TODO: log errors here
-                eprintln!("warning: cannot stat {}: {}", file_name, e);
-            }
-        }
-    }
-    Ok(metas)
+    Ok(new_meta)
 }
 
-// avoid hidden directories and files, other filters
-// avoid linux directories that are below the home directory of the user
-fn our_filter(entry: &DirEntry) -> bool {
+
+/// filter for the walkdir iterator that can skip directories and other specified files
+pub fn our_filter(entry: &DirEntry) -> bool {
 
     let filter = vec!["tmp", "var", "sys"];
 
@@ -137,7 +111,6 @@ fn our_filter(entry: &DirEntry) -> bool {
 
 
 // Read first 1024 bytes of file then hash, note that this hashes the bytes, not a string from the file
-// TODO: double check that hashing bytes is correct (integration testing) for get_file_hash()
 pub fn get_file_hash(file_name: String) -> Result<String, Box<dyn Error>> {
 
     let mut file = std::fs::File::open(file_name)?;
@@ -164,7 +137,3 @@ pub fn get_file_hash(file_name: String) -> Result<String, Box<dyn Error>> {
 }
 
 
-// takes in a file and returns the metadata struct for it
-// fn get_file_metadata() -> {
-    
-// }

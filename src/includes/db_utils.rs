@@ -32,6 +32,14 @@ impl DbState {
     }
 
 
+    /// turn the raw metadata into a value for the database to use.
+    pub fn construct_db_item(value: &FileMetadata)  -> Result<(), Box<dyn Error>> {
+	println!("hello");
+
+	Ok(())
+    }
+
+
     /// add db entry given key and value pair
     pub fn db_add(&self, key: i32, value: &FileMetadata, batch: &mut Batch) -> Result<(), Box<dyn Error>> {
 

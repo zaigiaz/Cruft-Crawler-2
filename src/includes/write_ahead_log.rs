@@ -1,11 +1,11 @@
-use crate::includes::file_utils::File_Meta;
+use crate::includes::file_utils::FileMetadata;
 use std::io::{Seek, SeekFrom};
 use std::fs::{OpenOptions, write};
 use std::io::Write;
 
-struct RotatingLog<'a> {
-    path: &'a str,
-    max_size: u64,
+pub struct RotatingLog<'a> {
+    pub path: &'a str,
+    pub max_size: u64,
 }
 
 impl RotatingLog<'_> {
