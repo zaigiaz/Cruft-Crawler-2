@@ -19,7 +19,6 @@ I need to finish these todos over spring break
     Tree 2 (content_hashes): Key = content hash → Value = list of file paths that have this content
 
 This gives you:
-
     O(1) lookup by path when inotify fires
     O(1) duplicate detection by checking the hash tree
     O(1) finding all duplicates of a given file

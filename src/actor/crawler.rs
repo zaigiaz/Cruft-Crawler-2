@@ -30,6 +30,7 @@ pub async fn run(actor: SteadyActorShadow, crawler_tx: SteadyTx<FileMetadata>,
 /// Internal behaviour for the crawler actor
 /// ------------------------------
 /// TODO :: crawler state lock update when crawling
+/// TODO :: use std::env to get path of executable and get correct paths for reading and writing files
 /// ------------------------------
 async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<FileMetadata>,
                                            state: SteadyState<CrawlerState>) -> Result<(),Box<dyn Error>> {
@@ -40,7 +41,7 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<Fi
 
     // TODO: replace this with config file or setup at command line
     // let search_path = read_config();
-    let crawl_path = Path::new("/home/zaigiaz/Programming/Cruft-Crawler-2/src/test_directory/another/");    
+    let crawl_path = Path::new("/home/zaigiaz/Programming/Cruft-Crawler-2/src/");    
 
     let write_ahead_log = RotatingLog {
 	path: "/home/zaigiaz/Programming/Cruft-Crawler-2/data/write_ahead_log.txt",

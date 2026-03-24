@@ -37,7 +37,8 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A,
 
     // TODO: add surefire pathway to database
     // TODO: add way to get last key from db | can use .back()
-    let db = DbState::new("/home/zaigiaz/Programming/Cruft-Crawler-2/data/db")?;
+    let db_file_name: PathBuf = "/home/zaigiaz/Programming/Cruft-Crawler-2/data/db".into();
+    let db = DbState::open(db_file_name)?;
 
     // TODO: scan db and get last key for this    
     let iter: sled::Iter;

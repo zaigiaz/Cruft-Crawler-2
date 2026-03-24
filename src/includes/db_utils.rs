@@ -7,48 +7,49 @@ use std::path::{Path, PathBuf};
 use sled::{Batch, open};
 use std::io::SeekFrom;
 
-/// State of our Sled Database containing the current open Database, and a backup batch in case of actor failure
+/// backup batch in case of actor failure
+/// note that sled already has WAL support so crash redundancy is already handled for us
+/// NOTE :: do we need trees in the struct?
 pub struct DbState {
-    backup_batch: Vec<FileMetadata>,
+    db_path: PathBuf, 
     database: sled::Db,
+    backup_batch: Vec<FileMetadata>,
 }
 
-// ------------------------------
-// TODO :: implement either hashing for FileMetadata struct or redo db logic
-// NOTE :: {hash, prompt string}: kv pair?
-// ------------------------------
 
+/// ------------------------------
+/// TODO :: Implement methods for the two trees now
+/// NOTE :: file_tree, hash_tree
+/// ------------------------------
 impl DbState {
 
     /// initialize and open the database
-    pub fn new(path: &str) -> Result<Self, Box<dyn Error>> {
-      let db = sled::open(path)
-            .map_err(|e| format!("Couldn't open database at {}: {}", path, e))?;
+    pub fn open(path: PathBuf) -> Result<Self, Box<dyn Error>> {
+      let db = sled::open(&path)
+            .map_err(|e| format!("Couldn't open database at {:?}: {}", path, e))?;
+
+
+	let file_tree = db.open_tree("file_tree").expect("open file_path tree");
+	let hash_tree = db.open_tree("hash_tree").expect("open hash_values tree");
 
         Ok(DbState {
-            backup_batch: Vec::new(),
-            database: db,
+	    db_path: path,
+	    database: db,
+            backup_batch: Vec::new(),	   
         })
     }
 
-
-    /// turn the raw metadata into a value for the database to use.
-    pub fn construct_db_item(value: &FileMetadata)  -> Result<(), Box<dyn Error>> {
-	println!("hello");
-
-	Ok(())
-    }
 
 
     /// add db entry given key and value pair
     pub fn db_add(&self, key: i32, value: &FileMetadata, batch: &mut Batch) -> Result<(), Box<dyn Error>> {
 
 	// serialise struct into u8
+	let key_s = key.to_be_bytes();
 	let value_s = value.to_bytes()?;
 
-	// serialize i32 to bytes
-	let key_s = key.to_be_bytes();
 
+	// serialize i32 to bytes
 	batch.insert(&key_s, value_s);
 	// let _insert = db.insert(key_s, value_s)?;
 
@@ -78,4 +79,18 @@ impl DbState {
         Ok(())
     }
 
+
+   /// re-opens database after crash
+   pub fn recover(&mut self) ->  Result<sled::Db, Box<dyn std::error::Error>> {
+        
+        let new_DB_state =  DbState::open(self.db_path.clone())?;
+        self.database = new_DB_state.database;
+        
+        // backup_batch is restored from checkpoint
+        // file_tree and hash_tree are recovered by sled
+              
+        Ok(self.database.clone())
+   }
+
 }
+
