@@ -27,10 +27,11 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A,
 
     let mut crawler_rx = crawler_rx.lock().await;
 
-    // TODO: add surefire pathway to database
-    // TODO: add way to get last key from db | can use .back()
     let db_file_name: PathBuf = "/home/zaigiaz/Programming/Cruft-Crawler-2/data/db".into();
+
+    // takes path and returns the DbState struct
     let db = DbState::open(db_file_name)?;
+
 
     // TODO: scan db and get last key for this    
     let iter: sled::Iter;
@@ -57,13 +58,7 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A,
 	while loop_ctr < batch_size as i32 { 
 
 	let recieved = actor.try_take(&mut crawler_rx);
-	let msg = recieved.expect("expected File_Meta Struct (crawler -> db_actor)");
-
-
-	    // ------------------------------
-	    // TODO :: print FileMetadata struct here
-	    // ------------------------------
-
+	let mut msg = recieved.expect("expected File_Meta Struct (crawler -> db_actor)");
 
 	// NOTE: db_loop counter could also be used to check how many prompts we have given to the LLM so far,
 	// to reduce context window by reprompting and wiping past history in LLM
@@ -71,7 +66,7 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A,
 	db_id    += 1;
 	 
 	// I want the db to have: db_id (counter), db_hash: key is hash value of file, prompt addition message as content;
-	let _add = DbState::db_add(&db, db_id, &msg, &mut batch);
+	let _add = DbState::db_add(&db, &mut msg, &mut batch);
 	}
 
 	// apply batch to db (this is atomic and prevents failure in case actor failure during operation)

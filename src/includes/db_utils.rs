@@ -15,7 +15,6 @@ use std::io::SeekFrom;
 pub struct DbState {
     db_path: PathBuf, 
     database: sled::Db,
-    backup_batch: Vec<FileMetadata>,
 }
 
 
@@ -37,42 +36,42 @@ impl DbState {
         Ok(DbState {
 	    db_path: path,
 	    database: db,
-            backup_batch: Vec::new(),	   
         })
     }
 
 
 
     /// add db entry given key and value pair
-    pub fn db_add(&self, key: i32, value: &FileMetadata, batch: &mut Batch) -> Result<(), Box<dyn Error>> {
+    pub fn db_add(&self, value: &mut FileMetadata, batch: &mut Batch) -> Result<(), Box<dyn Error>> {
 
 	// serialise struct into u8
-	let key_s = key.to_be_bytes();
-	let value_s = value.to_bytes()?;
+	let file_tree_key: &[u8] = value.abs_path.as_bytes();
+	let file_tree_value: &[u8] = &value.to_bytes()?;
 
-	// serialize i32 to bytes
-	batch.insert(&key_s, value_s);
-	// let _insert = db.insert(key_s, value_s)?;
+	// key for our hash tree
+	let hash_tree_key: &[u8] = value.hash.as_bytes();
+
+	let file_tree = self.database.open_tree("file_tree").expect("open file_path tree");
+	let hash_tree = self.database.open_tree("hash_tree").expect("open hash_path tree");
+
+	file_tree.insert(file_tree_key, file_tree_value);
+	hash_tree.insert(hash_tree_key, file_tree_key);
 
 	Ok(())
     }
 
 
     /// remove db entry given key
-    pub fn db_remove(&self, key: i32, batch: &mut Batch) -> Result<(), Box<dyn Error>> {
-	let key_s = key.to_be_bytes();   
-	batch.remove(&key_s);
+    pub fn db_remove(&self, ) -> Result<(), Box<dyn Error>> {
 	Ok(())
     }
 
 
     /// edit db entry given key
-    pub fn db_edit(&self, key: i32, value: FileMetadata, batch: &mut Batch) -> Result<(), Box<dyn Error>> {
-	// sled has immutable db, so we need to delete old key then insert new
-	self.db_remove(key, batch)?;
-	self.db_add(key, &value, batch)?;
+    pub fn db_edit(&self, value: FileMetadata) -> Result<(), Box<dyn Error>> {
 	Ok(())
     }
+
 
     /// Flush the batch to the database
     pub fn apply_batch(&self, batch: Batch) -> Result<(), Box<dyn Error>> {
