@@ -7,9 +7,11 @@ use std::path::{Path, PathBuf};
 use sled::{Batch, open};
 use std::io::SeekFrom;
 
-/// backup batch in case of actor failure
-/// note that sled already has WAL support so crash redundancy is already handled for us
+
+/// ------------------------------
 /// NOTE :: do we need trees in the struct?
+/// TODO :: Implement Trait for all of this?
+/// ------------------------------
 pub struct DbState {
     db_path: PathBuf, 
     database: sled::Db,
@@ -19,7 +21,7 @@ pub struct DbState {
 
 /// ------------------------------
 /// TODO :: Implement methods for the two trees now
-/// NOTE :: file_tree, hash_tree
+/// TODO :: Remove all these helper functions and just create things to serialize keys and values?
 /// ------------------------------
 impl DbState {
 
@@ -47,7 +49,6 @@ impl DbState {
 	// serialise struct into u8
 	let key_s = key.to_be_bytes();
 	let value_s = value.to_bytes()?;
-
 
 	// serialize i32 to bytes
 	batch.insert(&key_s, value_s);

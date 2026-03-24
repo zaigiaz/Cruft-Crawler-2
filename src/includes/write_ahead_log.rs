@@ -11,12 +11,14 @@ pub struct RotatingLog<'a> {
 impl RotatingLog<'_> {
     
     /// write the last path that was crawled by the crawler iterator and save to log file
-    pub fn write_log(&self, last_iter: &str) -> Result<(), std::io::Error> {
+    pub fn write_log(&mut self, last_iter: &str) -> Result<(), std::io::Error> {
 
 	let mut file = OpenOptions::new()
             .write(true)
             .append(true)
             .open(self.path)?;
+
+	self.rotate_log();
 
 	writeln!(file, "{}", last_iter).map_err(|e| {
             eprintln!("Couldn't write to file: {}", e);

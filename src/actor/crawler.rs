@@ -43,7 +43,7 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<Fi
     // let search_path = read_config();
     let crawl_path = Path::new("/home/zaigiaz/Programming/Cruft-Crawler-2/src/");    
 
-    let write_ahead_log = RotatingLog {
+    let mut write_ahead_log = RotatingLog {
 	path: "/home/zaigiaz/Programming/Cruft-Crawler-2/data/write_ahead_log.txt",
 	max_size: 1024 * 10,
     };
@@ -61,6 +61,8 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<Fi
 	    
 	    new_metadata.meta_print();
 	    actor.wait_vacant(&mut crawler_tx, 1).await;
+
+	    write_ahead_log.write_log(&new_metadata.abs_path);
 	    
 	    actor.try_send(&mut crawler_tx, new_metadata).expect("couldn't send to DB");
 	}

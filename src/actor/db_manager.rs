@@ -1,11 +1,6 @@
-#![allow(unused)]
-#![allow(non_camel_case_types)]
-#![allow(non_snake_case)]
-
 use steady_state::*;
 use crate::includes::file_utils::FileMetadata;
 use crate::includes::db_utils::*;
-
 
 use std::error::Error;
 use std::fs::OpenOptions;
@@ -13,12 +8,9 @@ use std::io::prelude::*;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use sled::Batch;
-// NOTE: add check to make sure counter is always asc order for unit testing
 
 // TODO: use .back() to get iter for last element, then compare with write-ahead log to ensure we are at correct position
 // NOTE: addtionally I can think of this like a play-cursor or iterator, can be used in addition with inotify actor later
-
-// last id we had in our state
 
 // size of batch we want (# of File_Meta Structs before writing to DB)
 const BATCH_SIZE: usize = 10;
