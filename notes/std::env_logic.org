@@ -1,0 +1,40 @@
+### how to use std::env and other rust concepts to ensure we are always reading and writing from a specific directory on our file system?
+
+```rust
+use std::env;
+use std::path::PathBuf;
+
+// 1. Setup context (e.g., at function start or main)
+pub struct FSContext {
+    base_dir: PathBuf,
+}
+
+impl FSContext {
+    // Enforce existence via `pushd` equivalent
+    pub fn new(root: &str) -> std::io::Result<Self> {
+        let current = env::current_dir()?;
+        
+        // Fail fast: ensure root exists.
+        std::fs::create_dir_all(root)?;
+        
+        // Hard switch to root
+        env::set_current_dir(root)?;
+        
+        Ok(FSContext {
+            base_dir: PathBuf::from(root),
+        })
+    }
+    
+    // Append relative path
+    pub fn path(&self, relative: &str) -> PathBuf {
+        self.base_dir.join(relative)
+    }
+}
+```
+
+**Pushback**
+
+1.  **`std::fs::create_dir_all` is I/O bound**: It does not just check existence; it attempts to create directories. If you just want to check (e.g., for logging), use `Path::exists()` to avoid side effects.
+2.  **Thread Safety**: Changing the current directory globally (`env::set_current_dir`) is not thread-safe. Avoid mutating the current dir from multiple threads simultaneously. Prefer passing `PathBuf` instances explicitly to functions instead of relying on the process's global CWD.
+
+### 

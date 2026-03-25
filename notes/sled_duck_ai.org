@@ -1,0 +1,62 @@
+* sled way of doing db operations
+#+BEGIN_SRC rust
+fn compare_and_swap<K, V, E, N>(
+    &self,
+    key: K,
+    expected: Option<E>,
+    new: Option<N>,
+) -> Result<CasResult, sled::Error>
+where
+    K: AsRef<[u8]>,
+    E: AsRef<[u8]>,
+    N: AsRef<[u8]>;
+#+END_SRC
+
+* increment counter
+#+BEGIN_SRC rust
+  use sled::{Db, IVec};
+
+  fn increment_counter(db: &Db, key: &[u8]) -> sled::Result<u64> {
+      loop {
+          /// 1 Read the current value (or treat missing as 0)
+          let current = db.get(key)?.map(|v| {
+              /// Convert the stored bytes to u64 (little‑endian)
+              let mut arr = [0u8; 8];
+              arr.copy_from_slice(&v);
+              u64::from_le_bytes(arr)
+          }).unwrap_or(0);
+
+          /// 2 Compute the new value
+          let new = current + 1;
+          let new_bytes = new.to_le_bytes();
+
+          /// 3 Try CAS: replace only if the value is still `current`
+          match db.compare_and_swap(
+              key,
+              Some(current.to_le_bytes()), // expected
+              Some(&new_bytes),            // new
+          )? {
+              sled::CasResult::Success => return Ok(new),
+              sled::CasResult::Failure { current: Some(actual) } => {
+                  /// Another thread changed the value; retry with the new actual value
+                  let mut arr = [0u8; 8];
+                  arr.copy_from_slice(&actual);
+                  /// loop continues with updated `current`
+                  continue;
+              }
+              sled::CasResult::Failure { current: None } => {
+                  /// Key disappeared between read and CAS – retry
+                  continue;
+              }
+          }
+      }
+  }
+#+END_SRC
+
+* Tips & pitfalls
+    Byte order – Choose a deterministic encoding (e.g., little‑endian for integers, UTF‑8 for strings). Mismatched encodings cause spurious CAS failures.
+    Avoid large values – sled works best with modest‑sized entries (a few KiB). For bigger blobs, store a reference (e.g., a hash) and keep the heavy data elsewhere.
+    Loop responsibly – CAS may spin if contention is high. Adding a short std::thread::yield_now() or exponential back‑off can reduce CPU waste.
+    Transactions – For multi‑key atomicity, use db.transaction(|tx| { … }). Inside a transaction you can call tx.compare_and_swap similarly.
+
+With these patterns you can safely update a sled database based on arbitrary conditions without explicit locks.

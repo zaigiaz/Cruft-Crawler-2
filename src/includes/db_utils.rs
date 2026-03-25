@@ -62,13 +62,20 @@ impl DbState {
 
 
     /// remove db entry given key
-    pub fn db_remove(&self, ) -> Result<(), Box<dyn Error>> {
+    pub fn db_remove(&self, value: &mut FileMetadata) -> Result<(), Box<dyn Error>> {
+	
+	let file_tree = self.database.open_tree(file_hash).expect("open file_path tree");
+	let 
+
 	Ok(())
     }
 
 
     /// edit db entry given key
-    pub fn db_edit(&self, value: FileMetadata) -> Result<(), Box<dyn Error>> {
+    pub fn db_edit(&self, file_path: String) -> Result<(), Box<dyn Error>> {
+	
+	
+
 	Ok(())
     }
 
