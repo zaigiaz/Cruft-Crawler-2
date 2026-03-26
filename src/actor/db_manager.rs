@@ -66,7 +66,7 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A,
 	db_id    += 1;
 	 
 	// I want the db to have: db_id (counter), db_hash: key is hash value of file, prompt addition message as content;
-	let _add = DbState::db_add(&db, &mut msg, &mut batch);
+	let add = DbState::db_add(&db, &mut msg, &mut batch)?;
 	}
 
 	// apply batch to db (this is atomic and prevents failure in case actor failure during operation)

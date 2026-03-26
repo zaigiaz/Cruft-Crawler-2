@@ -4,9 +4,8 @@ use std::fs::OpenOptions;
 use std::io::prelude::*;
 use std::io::Write;
 use std::path::{Path, PathBuf};
-use sled::{Batch, open};
+use sled::{Batch, open, Ivec};
 use std::io::SeekFrom;
-
 
 /// ------------------------------
 /// NOTE :: do we need trees in the struct?
@@ -15,6 +14,9 @@ use std::io::SeekFrom;
 pub struct DbState {
     db_path: PathBuf, 
     database: sled::Db,
+    file_tree: sled::Tree,
+    hash_tree: sled::Tree,
+    deletion_tree: sled::Tree,
 }
 
 
@@ -61,13 +63,11 @@ impl DbState {
     }
 
 
-    /// remove db entry given key
-    pub fn db_remove(&self, value: &mut FileMetadata) -> Result<(), Box<dyn Error>> {
-	
-	let file_tree = self.database.open_tree(file_hash).expect("open file_path tree");
-	let 
+    /// remove db entry given a key value
+    pub fn db_remove(&self, key: &[u8]) -> Result<(), Box<dyn Error>> {
 
-	Ok(())
+	self.database.compare_and_swap(key, )
+
     }
 
 

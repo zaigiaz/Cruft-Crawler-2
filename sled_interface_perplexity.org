@@ -1,0 +1,240 @@
+* please generate an overlooking spec on how this should work and generate some code, but try to be concise and terse.
+
+You can wrap sled in a small repository-style API that hides trees, serialization, and key formats and exposes simple CRUD methods for your `FileMetadata` records.[^1][^2]
+
+** High-level spec
+
+- *DbState* owns:
+    - *db_path: PathBuf*
+    - *db: sled::Db*
+    - *file_tree: sled::Tree* (primary index, key = absolute path)
+    - *hash_tree: sled::Tree* (secondary index, key = hash, value = absolute path)
+- All public methods work in terms of *FileMetadata* and *PathBuf*/*String*, never raw *&[u8]*.
+- Responsibilities:
+    - *open(path)*:
+        - Open *sled::Db*, then *file_tree* and *hash_tree* once and store them.[^3][^2]
+    - *insert(meta)*:
+        - Serialize *FileMetadata* to bytes.
+        - Insert into *file_tree* with key = *abs_path*.
+        - Insert into *hash_tree* with key = *hash*, value = *abs_path*.
+        - Optionally use *Batch* if you want atomic multi-op.[^4][^2]
+    - *get_by_path(path)*:
+        - Lookup in *file_tree*, deserialize bytes into *FileMetadata*.
+    - *get_by_hash(hash)*:
+        - Lookup *abs_path* in *hash_tree*, then load from *file_tree*.
+    - *update(meta)*:
+        - Same as insert but overwrites existing, and if *hash* changed, fix *hash_tree* (remove old hash entry, add new).
+    - *delete_by_path(path)*:
+        - Load *FileMetadata* from *file_tree* (to know its hash).
+        - Remove from *file_tree*.
+        - Remove from *hash_tree* using the hash key.
+    - *delete_by_hash(hash)*:
+        - Lookup *abs_path* in *hash_tree*.
+        - Remove from both trees.
+    - *recover()*:
+        - Close \& reopen db, keep same API.
+
+One simple example workflow: *insert*, *get_by_path*, *get_by_hash*, *update*, *delete_by_path*.
+
+** Suggested struct \& API
+
+#+BEGIN_SRC rust
+use sled::{Db, Tree, Batch};
+use std::{error::Error, path::{Path, PathBuf}};
+
+pub struct DbState {
+    db_path: PathBuf,
+    db: Db,
+    file_tree: Tree,
+    hash_tree: Tree,
+}
+
+impl DbState {
+    pub fn open<P: AsRef<Path>>(path: P) -> Result<Self, Box<dyn Error>> {
+        let db_path = path.as_ref().to_path_buf();
+        let db = sled::open(&db_path)
+            .map_err(|e| format!("Couldn't open database at {:?}: {}", db_path, e))?;
+
+        let file_tree = db.open_tree("file_tree")?;
+        let hash_tree = db.open_tree("hash_tree")?;
+
+        Ok(Self { db_path, db, file_tree, hash_tree })
+    }
+
+    fn serialize_meta(meta: &FileMetadata) -> Result<Vec<u8>, Box<dyn Error>> {
+        Ok(meta.to_bytes()?)
+    }
+
+    fn deserialize_meta(data: &[u8]) -> Result<FileMetadata, Box<dyn Error>> {
+        FileMetadata::from_bytes(data) // assume you implement this
+    }
+
+    fn file_key(path: &str) -> &[u8] {
+        path.as_bytes()
+    }
+
+    fn hash_key(hash: &str) -> &[u8] {
+        hash.as_bytes()
+    }
+
+    // ---------- Create / Upsert ----------
+
+    pub fn insert(&self, meta: &FileMetadata) -> Result<(), Box<dyn Error>> {
+        let file_key = Self::file_key(&meta.abs_path);
+        let hash_key = Self::hash_key(&meta.hash);
+        let value = Self::serialize_meta(meta)?;
+
+        let mut batch = Batch::default();
+        batch.insert(file_key, value);
+        self.file_tree.apply_batch(batch)?; // or self.db.apply_batch on the tree[web:3][web:9]
+
+        self.hash_tree.insert(hash_key, file_key)?;
+        Ok(())
+    }
+
+    // Insert using a shared batch on file_tree if you want to accumulate:
+    pub fn insert_with_batch(
+        &self,
+        meta: &FileMetadata,
+        batch: &mut Batch,
+    ) -> Result<(), Box<dyn Error>> {
+        let file_key = Self::file_key(&meta.abs_path);
+        let hash_key = Self::hash_key(&meta.hash);
+        let value = Self::serialize_meta(meta)?;
+
+        batch.insert(file_key, value);
+        self.hash_tree.insert(hash_key, file_key)?;
+        Ok(())
+    }
+
+    pub fn apply_batch(&self, batch: Batch) -> Result<(), Box<dyn Error>> {
+        self.file_tree.apply_batch(batch)?; // atomically on file_tree[web:3][web:9]
+        Ok(())
+    }
+
+    // ---------- Read ----------
+
+    pub fn get_by_path(&self, path: &str) -> Result<Option<FileMetadata>, Box<dyn Error>> {
+        let key = Self::file_key(path);
+        if let Some(ivec) = self.file_tree.get(key)? {
+            let meta = Self::deserialize_meta(&ivec)?;
+            Ok(Some(meta))
+        } else {
+            Ok(None)
+        }
+    }
+
+    pub fn get_by_hash(&self, hash: &str) -> Result<Option<FileMetadata>, Box<dyn Error>> {
+        let hk = Self::hash_key(hash);
+        let Some(path_bytes) = self.hash_tree.get(hk)? else {
+            return Ok(None);
+        };
+        let path = String::from_utf8(path_bytes.to_vec())?;
+        self.get_by_path(&path)
+    }
+
+    // ---------- Update / Edit ----------
+
+    pub fn update(&self, new_meta: &FileMetadata) -> Result<(), Box<dyn Error>> {
+        // Load existing to know old hash, if any
+        if let Some(old_meta) = self.get_by_path(&new_meta.abs_path)? {
+            if old_meta.hash != new_meta.hash {
+                // remove old hash entry
+                let old_hk = Self::hash_key(&old_meta.hash);
+                self.hash_tree.remove(old_hk)?;
+            }
+        }
+
+        // Upsert new record and hash mapping
+        let fk = Self::file_key(&new_meta.abs_path);
+        let hk = Self::hash_key(&new_meta.hash);
+        let val = Self::serialize_meta(new_meta)?;
+
+        self.file_tree.insert(fk, val)?;
+        self.hash_tree.insert(hk, fk)?;
+        Ok(())
+    }
+
+    // Optional CAS-style edit: only update if existing value matches
+    pub fn compare_and_swap_path(
+        &self,
+        path: &str,
+        old: Option<&FileMetadata>,
+        new: Option<&FileMetadata>,
+    ) -> Result<(), Box<dyn Error>> {
+        let key = Self::file_key(path);
+        let old_bytes = match old {
+            Some(v) => Some(Self::serialize_meta(v)?),
+            None => None,
+        };
+        let new_bytes = match new {
+            Some(v) => Some(Self::serialize_meta(v)?),
+            None => None,
+        };
+
+        // Uses sled::Tree::compare_and_swap via Deref[web:1][web:9]
+        let res = self.file_tree.compare_and_swap(key, old_bytes, new_bytes)?;
+        match res {
+            Ok(()) => Ok(()),
+            Err(e) => Err(format!("Compare-and-swap failed: {:?}", e.current).into()),
+        }
+    }
+
+    // ---------- Delete ----------
+
+    pub fn delete_by_path(&self, path: &str) -> Result<(), Box<dyn Error>> {
+        // Need hash to clean secondary index
+        if let Some(meta) = self.get_by_path(path)? {
+            let fk = Self::file_key(path);
+            let hk = Self::hash_key(&meta.hash);
+
+            self.file_tree.remove(fk)?;
+            self.hash_tree.remove(hk)?;
+        }
+        Ok(())
+    }
+
+    pub fn delete_by_hash(&self, hash: &str) -> Result<(), Box<dyn Error>> {
+        let hk = Self::hash_key(hash);
+        if let Some(path_bytes) = self.hash_tree.remove(hk)? {
+            let path = String::from_utf8(path_bytes.to_vec())?;
+            let fk = Self::file_key(&path);
+            self.file_tree.remove(fk)?;
+        }
+        Ok(())
+    }
+
+    // ---------- Recovery ----------
+
+    pub fn recover(&mut self) -> Result<(), Box<dyn Error>> {
+        let new = DbState::open(self.db_path.clone())?;
+        self.db = new.db;
+        self.file_tree = new.file_tree;
+        self.hash_tree = new.hash_tree;
+        Ok(())
+    }
+}
+#+END_SRC
+
+You can later extract a trait like *FileMetadataStore* with methods *insert*, *get_by_path*, *get_by_hash*, *update*, *delete_by_** and implement it for *DbState* to make the rest of your code independent of sled.
+
+1: https://docs.rs/sled/latest/sled/
+
+2: https://docs.rs/sled/latest/sled/struct.Tree.html
+
+3: https://docs.rs/sled/latest/sled/struct.Db.html
+
+4: https://docs.rs/sled/latest/sled/struct.Batch.html
+
+5: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/LSI.html
+
+6: https://github.com/spacejam/sled
+
+7: https://stackoverflow.com/questions/31618698/why-are-local-secondary-indexes-only-allowed-on-a-hash-and-range-key-not-on-jus
+
+8: https://crates.io/crates/sled
+
+9: https://docs.dlsouza.lol/sled/index.html
+
+10: https://www.vldb.org/pvldb/vol13/p3559-kipf.pdf
+
