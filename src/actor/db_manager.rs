@@ -29,8 +29,8 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A,
 
     let db_file_name: PathBuf = "/home/zaigiaz/Programming/Cruft-Crawler-2/data/db".into();
 
-    // takes path and returns the DbState struct
-    let db = DbState::open(db_file_name)?;
+    // takes path and returns the DbState struct, for all operations
+    let database = DbState::open(db_file_name)?;
 
 
     // TODO: scan db and get last key for this    
@@ -66,11 +66,11 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A,
 	db_id    += 1;
 	 
 	// I want the db to have: db_id (counter), db_hash: key is hash value of file, prompt addition message as content;
-	let add = DbState::db_add(&db, &mut msg, &mut batch)?;
+	database.insert(&msg)?;
 	}
 
-	// apply batch to db (this is atomic and prevents failure in case actor failure during operation)
-	db.apply_batch(batch)?;
+	// TODO :: fix the batching stuff later
+	// database.apply_batch(batch)?;
 	loop_ctr = 0;	
     }
 

@@ -11,8 +11,8 @@ use hex;
 
 use crate::actor::crawler::CrawlerState;
 
-
 /// metadata struct for all the variables to make decisions with
+/// This struct of values gets decomposed into a prompt that is sent to our LLM model
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub(crate) struct FileMetadata {
     pub abs_path:  String,
@@ -40,17 +40,16 @@ impl FileMetadata {
         println!("--------------------");
     }
 
-    /// serialize into bytes using bincode
+    /// serialize FileMetadata struct into bytes using serde_cbor
     pub fn to_bytes(&self) -> Result<Vec<u8>, Box<dyn Error>> {
 	Ok(serde_cbor::to_vec(self)?)
     }
-
-    /// deserialize from bytes using bincode
-    pub fn from_bytes(bytes: &[u8]) -> Result<Self, Box<dyn Error>> {
-	Ok(serde_cbor::from_slice(bytes)?)
-    }
 }
 
+/// deserialize from bytes using serde_cbor, returns FileMetadata Struct
+pub fn from_bytes(bytes: &[u8]) -> Result<FileMetadata, Box<dyn Error>> {
+    Ok(serde_cbor::from_slice(bytes)?)
+}
 
 
 /// takes in a Walkdir Iterator and returns the filtered metadata struct for it
@@ -58,8 +57,6 @@ pub fn get_file_metadata(entry: DirEntry) -> Result<FileMetadata, Box<dyn Error>
 
     let abs_path: String = entry.path()
 	.to_path_buf().to_string_lossy().to_string();
-
-    // state.abs_path = abs_path.clone();
     
     let name_os: &OsStr = entry.file_name();
     let file_name: String = match name_os.to_str() {
@@ -110,7 +107,7 @@ pub fn our_filter(entry: &DirEntry) -> bool {
 }
 
 
-// Read first 1024 bytes of file then hash, note that this hashes the bytes, not a string from the file
+/// Read first 1024 bytes of file then hash, note that this hashes the bytes, not a string from the file
 pub fn get_file_hash(file_name: String) -> Result<String, Box<dyn Error>> {
 
     let mut file = std::fs::File::open(file_name)?;
