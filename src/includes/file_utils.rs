@@ -18,7 +18,6 @@ pub(crate) struct FileMetadata {
     pub abs_path:  String,
     pub file_name: String,
     pub hash:      String,
-    pub is_file:   bool,
     pub size:      u64,
     pub modified:  i64,
     pub created:   i64,
@@ -32,7 +31,6 @@ impl FileMetadata {
 	println!("Absolute_Path: {:?}", self.abs_path);
 	println!("File_Name: {}",       self.file_name);
 	println!("hash: {}",            self.hash);
-	println!("is_file: {}",         self.is_file);
 	println!("size: {}",            self.size);
 	println!("modified: {}",        self.modified);
 	println!("created: {}",         self.created);
@@ -66,28 +64,23 @@ pub fn get_file_metadata(entry: DirEntry) -> Result<FileMetadata, Box<dyn Error>
     
     let meta = entry.metadata()?;
 
-    let is_file:  bool   = meta.is_file();
     let size:     u64    = meta.len();
     let modified: i64    = FileTime::from_last_modification_time(&meta).seconds() / 60;
     let created:  i64    = FileTime::from_creation_time(&meta).expect("created file time").seconds() / 60;
     let readonly: bool   = meta.permissions().readonly();
     let mut hash: String = String::new();
 
-    if meta.is_file() {
-	hash = get_file_hash(abs_path.clone()).expect("didn't get hash value");
-    } else { hash = String::from(""); }
-    
+    hash = get_file_hash(abs_path.clone()).expect("didn't get hash value");
+
     let new_meta = FileMetadata {
 	abs_path,
         file_name,
 	hash, 
-        is_file,
         size,
         modified, 
         created,
         readonly,
     };
-
     Ok(new_meta)
 }
 
@@ -95,7 +88,7 @@ pub fn get_file_metadata(entry: DirEntry) -> Result<FileMetadata, Box<dyn Error>
 /// filter for the walkdir iterator that can skip directories and other specified files
 pub fn our_filter(entry: &DirEntry) -> bool {
 
-    let filter = vec!["tmp", "var", "sys"];
+    let filter = vec!["tmp", "var", "sys", "bin"];
 
     entry.file_name()
         .to_str()
@@ -117,6 +110,7 @@ pub fn get_file_hash(file_name: String) -> Result<String, Box<dyn Error>> {
 
     let n = file.read(&mut buffer)?;
 
+    // create sha256 hash of first 1024 bytes of this file
     let mut hasher = Sha256::new();
     hasher.update(&buffer[..n]);
     let result = hasher.finalize();
@@ -130,5 +124,6 @@ pub fn get_file_hash(file_name: String) -> Result<String, Box<dyn Error>> {
     // slice to 16 digits
     let final_value = &convert[0..16];
     
+    // return as hash string
     Ok(final_value.to_string())
 }

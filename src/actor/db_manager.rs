@@ -22,6 +22,9 @@ pub async fn run(actor: SteadyActorShadow,
 }
 
 
+/// ------------------------------
+/// TODO :: fix the batching stuff later
+/// ------------------------------
 async fn internal_behavior<A: SteadyActor>(mut actor: A,
                                            crawler_rx: SteadyRx<FileMetadata>) -> Result<(),Box<dyn Error>> {
 
@@ -32,16 +35,13 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A,
     // takes path and returns the DbState struct, for all operations
     let database = DbState::open(db_file_name)?;
 
-
-    // TODO: scan db and get last key for this    
+    // TODO ::  scan db and get last key for this, using iterator over the file_tree
     let iter: sled::Iter;
 
     let mut loop_ctr: i32 = 0;
-    let mut db_id: i32 = 0;
 
     while actor.is_running(|| crawler_rx.is_closed_and_empty()) {
 
-	let mut batch = Batch::default();
 	let mut batch_size = 0;
 	let unit_cnt  = actor.avail_units(&mut crawler_rx);
 
@@ -60,16 +60,11 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A,
 	let recieved = actor.try_take(&mut crawler_rx);
 	let mut msg = recieved.expect("expected File_Meta Struct (crawler -> db_actor)");
 
-	// NOTE: db_loop counter could also be used to check how many prompts we have given to the LLM so far,
-	// to reduce context window by reprompting and wiping past history in LLM
 	loop_ctr += 1;
-	db_id    += 1;
 	 
-	// I want the db to have: db_id (counter), db_hash: key is hash value of file, prompt addition message as content;
 	database.insert(&msg)?;
 	}
 
-	// TODO :: fix the batching stuff later
 	// database.apply_batch(batch)?;
 	loop_ctr = 0;	
     }

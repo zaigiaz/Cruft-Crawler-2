@@ -4,7 +4,6 @@ use std::io::prelude::*;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use sled::{Batch, open, IVec};
-// use std::io::SeekFrom;
 
 use crate::includes::file_utils::{FileMetadata, from_bytes};
 
@@ -18,11 +17,7 @@ pub struct DbState {
     deletion_tree: sled::Tree,
 }
 
-
-/// ------------------------------
-/// TODO :: Implement methods for the two trees now
-/// TODO :: Remove all these helper functions and just create things to serialize keys and values?
-/// ------------------------------
+/// implemented functions for DbState
 impl DbState {
 
     /// initialize and open the database
@@ -62,10 +57,7 @@ impl DbState {
     }
 
 
-    // Insert using a shared batch on file_tree if you want to accumulate:
-    /// ------------------------------
-    /// TODO :: correct the serialize keys functions for my fileMeta stuct
-    /// ------------------------------
+    /// Insert using a shared batch on file_tree if you want to accumulate:
     pub fn insert_with_batch(&self, meta: &FileMetadata, batch: &mut Batch) -> Result<(), Box<dyn Error>> {
         let file_key = Self::file_key(&meta.abs_path);
         let hash_key = Self::hash_key(&meta.hash);
@@ -75,8 +67,8 @@ impl DbState {
         self.hash_tree.insert(hash_key, file_key)?;
         Ok(())
     }
-
-    // apply the batch on the file_tree
+    
+    /// apply the batch on the file_tree
     pub fn apply_batch(&self, batch: Batch) -> Result<(), Box<dyn Error>> {
         self.file_tree.apply_batch(batch)?; // atomically on file_tree[web:3][web:9]
         Ok(())

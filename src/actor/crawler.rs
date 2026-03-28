@@ -39,13 +39,15 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<Fi
     let mut state = state.lock(|| CrawlerState{abs_path: String::new()}).await;
     let mut crawler_tx = crawler_tx.lock().await;
 
-    // TODO: replace this with config file or setup at command line
     // let search_path = read_config();
+    // TODO :: replace this with config file or setup at command line
     let crawl_path = Path::new("/home/zaigiaz/Programming/Cruft-Crawler-2/src/");    
 
+
+    // create write_ahead log for crawler, and rotate it every 5kb
     let mut write_ahead_log = RotatingLog {
 	path: "/home/zaigiaz/Programming/Cruft-Crawler-2/data/write_ahead_log.txt",
-	max_size: 1024 * 10,
+	max_size: 1024 * 5,
     };
         
     while actor.is_running(|| crawler_tx.mark_closed()) {
@@ -57,6 +59,10 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<Fi
 
             let entry = entry_res?;
 	    
+	    if !entry.metadata()?.is_file() {
+		continue;
+	    }
+	    
 	    let new_metadata = get_file_metadata(entry)?;
 	    
 	    new_metadata.meta_print();
@@ -67,7 +73,6 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<Fi
 	    actor.try_send(&mut crawler_tx, new_metadata).expect("couldn't send to DB");
 	}
 
-	// TODO: implement voting or consensus logic	
 	actor.request_shutdown().await;
     }
 	return Ok(());
@@ -94,17 +99,17 @@ fn test_crawler() -> Result<(), Box<dyn Error>> {
 
 
 
-    // TODO: test sending on crawler_tx
+    // TODO :: test sending on crawler_tx
     // assert_steady_tx_eq_send!(&crawler_tx, File_Meta struct)
 
-    // TODO: test file_hash function
+    // TODO :: test file_hash function
     let test_str: PathBuf = "./src/test_directory/second.txt";
     let test_output: String = String::from("example");
     let hashed_output: String = visit_dir(test_str);
     assert_eq!(hashed_output, test_output);
 
 
-    // TODO: test visit_dir function
+    // TODO :: test visit_dir function
     // test_crawl = visit_dir("test directory path")
 
     
