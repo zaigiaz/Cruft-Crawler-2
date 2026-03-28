@@ -42,7 +42,17 @@ impl FileMetadata {
     pub fn to_bytes(&self) -> Result<Vec<u8>, Box<dyn Error>> {
 	Ok(serde_cbor::to_vec(self)?)
     }
+
+    pub fn to_prompt(&self) -> Result<(&str), Box<dyn Error>> {
+	let prompt = "The absolute path of the file is {}
+                      size of the file is {}
+                      is the file read-only? {}
+                      the last modified time was {}";
+
+        Ok(prompt)
+    }
 }
+
 
 /// deserialize from bytes using serde_cbor, returns FileMetadata Struct
 pub fn from_bytes(bytes: &[u8]) -> Result<FileMetadata, Box<dyn Error>> {
@@ -127,3 +137,4 @@ pub fn get_file_hash(file_name: String) -> Result<String, Box<dyn Error>> {
     // return as hash string
     Ok(final_value.to_string())
 }
+

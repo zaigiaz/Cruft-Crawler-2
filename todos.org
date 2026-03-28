@@ -1,14 +1,9 @@
 * The Rewrite
-- make sure to add the lock() method to make sure wal is consistent
-- maybe also write string as bytes for faster write time?
-
 - user interface to correctly save to correct db location and other stuff
 - some type of system variable? for paths and everything std::env
 
-- correctly implement database (finish helper functions)
-- re-factor all db operations to use compare_and_swap() and other sled idioms
+- integrate max's AI code for local inference
 
-- implement get_dir_hash(),
 - Test the testing framework and see if it works
 
 - create basic inotify actor that communicates with the database whenever a file is changed on hard-drive
@@ -16,7 +11,7 @@
 * TODOS
 ** CRAWLER
 TODO: model prompt message string (this gets sent to model?)
-TODO: (integration testing) for get_file_hash() and dir_hash()
+TODO: (integration testing) for get_file_hash()
 TODO: (integration testing) for visit_dir()
 TODO: (integration testing) for rx and channel testing
 TODO: log errors, and add match or .expect() for various functions
