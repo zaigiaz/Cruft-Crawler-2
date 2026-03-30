@@ -43,11 +43,19 @@ impl FileMetadata {
 	Ok(serde_cbor::to_vec(self)?)
     }
 
-    pub fn to_prompt(&self) -> Result<(&str), Box<dyn Error>> {
-	let prompt = "The absolute path of the file is {}
-                      size of the file is {}
-                      is the file read-only? {}
-                      the last modified time was {}";
+    /// turn the struct into a formatted prompt to be sent to the LLM
+    pub fn to_prompt(&self) -> Result<(String), Box<dyn Error>> {
+        let prompt = format!(
+            "You are an automated file management assistant. You must make a single \
+             decision about whether to keep or delete a file based solely on the \
+             metadata provided. Do not explain, justify, or add anything else. Your \
+             response must be exactly one word: either \"keep\" or \"delete\".\n\
+             The absolute path of the file is {}\n\
+             size of the file is {}\n\
+             is the file read‑only? {}\n\
+             the last modified time was {} minutes ago",
+            self.abs_path, self.size, self.readonly, self.modified
+        );
 
         Ok(prompt)
     }

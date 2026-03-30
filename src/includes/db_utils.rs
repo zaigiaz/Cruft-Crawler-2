@@ -11,10 +11,10 @@ use crate::includes::file_utils::{FileMetadata, from_bytes};
 /// it has the database handle and all the open namespaces for each tree
 pub struct DbState {
     db_path: PathBuf, 
-    database: sled::Db,
-    file_tree: sled::Tree,
-    hash_tree: sled::Tree,
-    deletion_tree: sled::Tree,
+    database: sled::Db,        // DB handle
+    file_tree: sled::Tree,     // LLM reads this
+    hash_tree: sled::Tree,     // TUI reads this
+    deletion_tree: sled::Tree, // TUI reads this
 }
 
 /// implemented functions for DbState

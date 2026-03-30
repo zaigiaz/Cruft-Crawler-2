@@ -10,7 +10,6 @@
 
 * TODOS
 ** CRAWLER
-TODO: model prompt message string (this gets sent to model?)
 TODO: (integration testing) for get_file_hash()
 TODO: (integration testing) for visit_dir()
 TODO: (integration testing) for rx and channel testing
