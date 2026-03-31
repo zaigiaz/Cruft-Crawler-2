@@ -7,6 +7,9 @@ use sled::{Batch, open, IVec};
 
 use crate::includes::file_utils::{FileMetadata, from_bytes};
 
+/// TODO :: add keep tree, to always know what files to keep
+
+
 /// main struct containing state for the database
 /// it has the database handle and all the open namespaces for each tree
 pub struct DbState {

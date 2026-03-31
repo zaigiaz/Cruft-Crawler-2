@@ -2,7 +2,10 @@
 - user interface to correctly save to correct db location and other stuff
 - some type of system variable? for paths and everything std::env
 
-- integrate max's AI code for local inference
+- Fix the TUI stuff, get it working, and reading DB
+- integrate max's AI code for local inference, figure out why his works and not CC_0.1
+- Figure out how to parse model output for yes/no
+- create Keep tree, so we know not to delete something, and just ignore when file_path comes up.
 
 - Test the testing framework and see if it works
 

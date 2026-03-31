@@ -1,11 +1,11 @@
 use steady_state::*;
 use std::path::PathBuf;
+use crate::includes::db_utils::*;
 
-pub async fn run(
-    actor: SteadyActorShadow,
-    ai_model_to_ui_rx: SteadyRx<String>,
-    ui_to_db_tx: SteadyTx<PathBuf>,
-) -> Result<(), Box<dyn std::error::Error>> {
+
+/// TODO :: include stuff for DB
+
+pub async fn run(actor: SteadyActorShadow) -> Result<(), Box<dyn std::error::Error>> {
     let actor = actor.into_spotlight([&ai_model_to_ui_rx], [&ui_to_db_tx]);
     if actor.use_internal_behavior {
         internal_behavior(actor, ai_model_to_ui_rx, ui_to_db_tx).await
@@ -14,11 +14,7 @@ pub async fn run(
     }
 }
 
-async fn internal_behavior<A: SteadyActor>(
-    mut actor: A,
-    ai_model_to_ui_rx: SteadyRx<String>,
-    ui_to_db_tx: SteadyTx<PathBuf>,
-) -> Result<(), Box<dyn std::error::Error>> {
+async fn internal_behavior<A: SteadyActor>(mut actor: A) -> Result<(), Box<dyn std::error::Error>> {
     let mut ai_model_to_ui_rx = ai_model_to_ui_rx.lock().await;
     let mut ui_to_db_tx = ui_to_db_tx.lock().await;
 
@@ -31,12 +27,16 @@ async fn internal_behavior<A: SteadyActor>(
 
     /// TODO :: Change this to read delete_tree from DB
     while actor.is_running(|| ai_model_to_ui_rx.is_closed_and_empty()) {
+
         // Forward AI verdicts → TUI
         while let Some(verdict) = actor.try_take(&mut ai_model_to_ui_rx) {
             if verdict.trim().to_lowercase() == "delete" {
                 let _ = suggest_tx.send(PathBuf::from(&verdict));
             }
         }
+
+
+	/// TODO :: function to handle deleting file and update DB afterwards
 
         // Forward TUI actions → DB
         while let Ok(path) = delete_rx.try_recv() {

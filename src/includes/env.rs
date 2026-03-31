@@ -1,7 +1,10 @@
 use std::env;
 use std::path::PathBuf;
 
-// 1. Setup context (e.g., at function start or main)
+
+
+/// Setup context (e.g., at function start or main)
+/// This is to reconstruct the correct path to wherever our executable is
 pub struct FSContext {
     base_dir: PathBuf,
 }

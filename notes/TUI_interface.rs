@@ -30,11 +30,7 @@ pub async fn run(
     }
 }
 
-async fn internal_behavior<A: SteadyActor>(
-    mut actor: A,
-    ai_model_to_ui_rx: SteadyRx<String>,
-    ui_to_db_tx: SteadyTx<PathBuf>,
-) -> Result<(), Box<dyn std::error::Error>> {
+async fn internal_behavior<A: SteadyActor>(mut actor: A) -> Result<(), Box<dyn std::error::Error>> {
     let mut ai_model_to_ui_rx = ai_model_to_ui_rx.lock().await;
     let mut ui_to_db_tx = ui_to_db_tx.lock().await;
 
