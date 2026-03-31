@@ -41,12 +41,12 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<Fi
 
     // let search_path = read_config();
     // TODO :: replace this with config file or setup at command line
-    let crawl_path = Path::new("/home/zaigiaz/Programming/Cruft-Crawler-2/src/");    
+    let crawl_path = Path::new("/home/shayne/Programming/Cruft-Crawler-2/src/");    
 
 
     // create write_ahead log for crawler, and rotate it every 5kb
     let mut write_ahead_log = RotatingLog {
-	path: "/home/zaigiaz/Programming/Cruft-Crawler-2/data/write_ahead_log.txt",
+	path: "/home/shayne/Programming/Cruft-Crawler-2/data/write_ahead_log.txt",
 	max_size: 1024 * 5,
     };
         
