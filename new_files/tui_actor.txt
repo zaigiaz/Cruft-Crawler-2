@@ -4,19 +4,23 @@ use crate::includes::db_utils::*;
 
 
 /// TODO :: include stuff for DB
-
+/// The run function for the TUI actor
 pub async fn run(actor: SteadyActorShadow) -> Result<(), Box<dyn std::error::Error>> {
+
     let actor = actor.into_spotlight([&ai_model_to_ui_rx], [&ui_to_db_tx]);
+
     if actor.use_internal_behavior {
-        internal_behavior(actor, ai_model_to_ui_rx, ui_to_db_tx).await
+        internal_behavior(actor).await
     } else {
-        actor.simulated_behavior(vec![&ai_model_to_ui_rx]).await
+        actor.simulated_behavior().await
     }
 }
 
+/// the internal behaviour for the TUI actor
 async fn internal_behavior<A: SteadyActor>(mut actor: A) -> Result<(), Box<dyn std::error::Error>> {
-    let mut ai_model_to_ui_rx = ai_model_to_ui_rx.lock().await;
-    let mut ui_to_db_tx = ui_to_db_tx.lock().await;
+
+    // let mut ai_model_to_ui_rx = ai_model_to_ui_rx.lock().await;
+    // let mut ui_to_db_tx = ui_to_db_tx.lock().await;
 
     /// TODO :: Change this to actor channels, or remove because we dont need
     // let (suggest_tx, suggest_rx) = mpsc::channel::<PathBuf>();
@@ -36,8 +40,7 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A) -> Result<(), Box<dyn s
         }
 
 
-	/// TODO :: function to handle deleting file and update DB afterwards
-
+	/// TODO :: function to handle deleting file and update DB afterwards rather than this chunk
         // Forward TUI actions → DB
         while let Ok(path) = delete_rx.try_recv() {
             actor.wait_vacant(&mut ui_to_db_tx, 1).await;

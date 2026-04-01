@@ -1,0 +1,53 @@
+#![allow(unused)]
+
+use steady_state::*;
+use crate::llm_engine::LlmEngine;
+
+use llama_cpp_2::context::params::LlamaContextParams;
+use llama_cpp_2::llama_backend::LlamaBackend;
+use llama_cpp_2::llama_batch::LlamaBatch;
+use llama_cpp_2::model::params::LlamaModelParams;
+use llama_cpp_2::model::LlamaModel;
+use llama_cpp_2::model::AddBos;
+use llama_cpp_2::sampling::LlamaSampler;
+use std::io::Write;
+use std::num::NonZeroU32;
+use std::{any, fs};
+
+use crate::actor::crawler;
+
+const MODEL_FILE_PATH: &str  = "~/third_party/ai_models/Qwen/Qwen3-4B-Instruct-2507-Q8_0.gguf";
+
+/// run function for the AI model actor
+pub async fn run(actor: SteadyActorShadow) -> Result<(),Box<dyn Error>> {
+
+    let actor = actor.into_spotlight([&crawler_to_model_rx], [&ai_model_to_ui_tx]);
+	
+
+	if actor.use_internal_behavior {
+	    internal_behavior(actor, crawler_to_model_rx, ai_model_to_ui_tx).await
+	} else {
+	    actor.simulated_behavior(vec!(&crawler_to_model_rx)).await
+	}
+}
+
+
+/// Internal behaviour for the actor
+async fn internal_behavior<A: SteadyActor>(mut actor: A) -> Result<(),Box<dyn Error>> {
+
+    // load the AI model and run;
+	let engine = LlmEngine::load_new_model(
+        MODEL_FILE_PATH
+    )?;
+    
+    /// TODO :: think about new condition for while loop
+    while actor.is_running() {
+		 
+	let resp1 = engine.infer_model(&prompt1)?;
+	println!({:?}, resp1);
+	
+    }
+    return Ok(());
+} 
+
+
