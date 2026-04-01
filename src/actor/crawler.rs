@@ -41,7 +41,7 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<Fi
 
     // let search_path = read_config();
     // TODO :: replace this with config file or setup at command line
-    let crawl_path = Path::new("/home/shayne/Programming/Cruft-Crawler-2/src/");    
+    let crawl_path = Path::new("/home/zaigiaz/Programming/Cruft-Crawler-2/src/");    
 
 
     // create write_ahead log for crawler, and rotate it every 5kb
@@ -65,7 +65,9 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<Fi
 	    
 	    let new_metadata = get_file_metadata(entry)?;
 	    
-	    new_metadata.meta_print();
+	    // debugging statement for showcase
+	    // new_metadata.meta_print();
+	    
 	    actor.wait_vacant(&mut crawler_tx, 1).await;
 
 	    write_ahead_log.write_log(&new_metadata.abs_path);

@@ -6,7 +6,7 @@ use llama_cpp_2::model::LlamaModel;
 use llama_cpp_2::model::params::LlamaModelParams;
 use llama_cpp_2::model::{AddBos, Special};
 use llama_cpp_2::sampling::LlamaSampler;
-use llama_cpp_2::{send_logs_to_tracing,LogOptions};
+use llama_cpp_2::{send_logs_to_tracing, LogOptions};
 use std::io::Write;
 use std::num::NonZeroU32;
 use std::{any, fs};
@@ -20,25 +20,41 @@ pub struct LlmEngine {
 }
 
 impl LlmEngine {
+
+    /// loads a gguf model for the llama.cpp backend
     pub fn load_new_model(model_path: &str) -> anyhow::Result<Self> {
-        let backend = LlamaBackend::init()?;
+
+	let backend = LlamaBackend::init().map_err(|e| {
+	    eprintln!("backend init failed: {:?}", e);
+	    e
+	})?;
+
         let model_params = LlamaModelParams::default();
-        let log_options = LogOptions::default().with_logs_enabled(false);
+        let log_options = LogOptions::default().with_logs_enabled(true);
         send_logs_to_tracing(log_options);
 
-        let model = LlamaModel::load_from_file(&backend, model_path, &model_params)?;
+	/// TODO :: LOAD FROM FILE ERROR
+	let model = match LlamaModel::load_from_file(&backend, model_path, &model_params) {
+	    Ok(m) => m,
+	    Err(e) => {
+		eprintln!("Failed to load model from {}: {:?}", model_path, e);
+		return Err(e.into());
+	    }
+	};
+
+	println!("here is a new printing line!");
 
 	// use libc to set priority and pin process
-        #[cfg(target_os = "linux")]
-        {
-            unsafe {
-                let mut cpu_set: libc::cpu_set_t = std::mem::zeroed();
-                libc::CPU_SET(0, &mut cpu_set); //pin to core 0, seems to overfill to cores 1, and 2
-                libc::sched_setaffinity(0, std::mem::size_of::<libc::cpu_set_t>(), &cpu_set);
-            }
-        }
+        // #[cfg(target_os = "linux")]
+        // {
+        //     unsafe {
+        //         let mut cpu_set: libc::cpu_set_t = std::mem::zeroed();
+        //         libc::CPU_SET(0, &mut cpu_set); //pin to core 0, seems to overfill to cores 1, and 2
+        //         libc::sched_setaffinity(0, std::mem::size_of::<libc::cpu_set_t>(), &cpu_set);
+        //     }
+        // }
 
-        Ok(Self { backend, model })
+        Ok(Self {backend, model})
     }
 
     /// creates context for the model, keep to one thread with 128 context size

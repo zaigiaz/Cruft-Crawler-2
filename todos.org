@@ -1,47 +1,27 @@
 * The Rewrite
+
+- Fix Voting Issues between Actors so AI model can run without immediatly getting voted out
+- Figure out how to parse model output for yes/no
+
+- Fix the TUI stuff, get it working, and reading DB
+
 - user interface to correctly save to correct db location and other stuff
 - some type of system variable? for paths and everything std::env
 
-- integrate max's AI code for local inference, figure out why his works and not CC_0.1
-- create Keep tree, so we know not to delete something, and just ignore when file_path comes up.
-- Fix the TUI stuff, get it working, and reading DB
-- Figure out how to parse model output for yes/no
+- https://sledoview.greq.me/ download and use this for viewing database (for debugging)
+- use .back() to get iter for last element, then compare with write-ahead log
+- integration and unit testing
 
-- Test the testing framework and see if it works
+- test running for multiple days/week
+- record demo video for presentation
 
-- create basic inotify actor that communicates with the database whenever a file is changed on hard-drive
+* TUI
+- list operations, write code to actually delete files given a path.
+- color coding for nice output?
+- user prompt for which directory, etc.
 
-* TODOS
-** CRAWLER
-TODO: (integration testing) for get_file_hash()
-TODO: (integration testing) for visit_dir()
-TODO: (integration testing) for rx and channel testing
-TODO: log errors, and add match or .expect() for various functions
+* Project Wrap-up
+- Create Slides, Notes, for presentations on Llama.cpp and Local LLM inference
+- Write Mockup of all the models we tried and the strengths/weaknesses of different approaches.
 
-** DB MANAGER
-TODO: https://sledoview.greq.me/ download and use this for viewing database (for debugging)
-TODO: error checking for db operations
-TODO: inotify integration, when value changes (for both trees)
-TODO: add fallback state 
-TODO: use .back() to get iter for last element, then compare with write-ahead log
-TODO: integration and unit testing
 
-** INOTIFY
-TODO: basic initiation
-TODO: basic actor setup
-TODO: watch-list management
-TODO: write logic to edit DB if File in DB is changed
-
-** TUI
-TODO: list operations, write code to actually delete files given a path.
-TODO: color coding for nice output?
-TODO: user prompt for which directory, etc.
-
-** AI
-TODO: Prompt Message (Although we would get this from Crawler, and would be stored in DB)
-TODO: Create Slides, Notes, for presentations on Llama.cpp and Local LLM inference
-TODO: Write Mockup of all the models we tried and the strengths/weaknesses of different approaches.
-
-** Final Stuff
-TODO: test running for multiple days/week
-TODO: record demo video for presentation

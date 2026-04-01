@@ -18,7 +18,7 @@ pub struct DbState {
     file_tree: sled::Tree,     // LLM reads this
     hash_tree: sled::Tree,     // TUI reads this
     deletion_tree: sled::Tree, // TUI reads this
-    never_delete: sled::Tree,  // TUI reads this
+    keep_tree: sled::Tree,  // TUI reads this
 }
 
 /// implemented functions for DbState
@@ -33,8 +33,9 @@ impl DbState {
         let file_tree = database.open_tree("file_tree")?;
         let hash_tree = database.open_tree("hash_tree")?;
         let deletion_tree = database.open_tree("deletion_tree")?;
+        let keep_tree = database.open_tree("keep_tree")?;
 
-        Ok(Self { db_path, database, file_tree, hash_tree, deletion_tree })
+        Ok(Self { db_path, database, file_tree, hash_tree, deletion_tree, keep_tree })
     }
     
     /// given a path, return the bytes of it

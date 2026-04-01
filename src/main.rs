@@ -8,7 +8,8 @@ use crate::includes::file_utils::FileMetadata;
 // crate that adds in both the actors from the actor/ directory
 pub(crate) mod actor {  
     pub(crate) mod crawler;
-    pub(crate) mod db_manager;
+    pub(crate) mod db_manager;    
+    pub(crate) mod ai_model;    
 }
 
 pub(crate) mod includes {
@@ -16,6 +17,7 @@ pub(crate) mod includes {
     pub(crate) mod db_utils;
     pub(crate) mod write_ahead_log;
     pub(crate) mod env;
+    pub(crate) mod llm_engine;
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -34,6 +36,8 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 const NAME_CRAWLER: &str = "CRAWLER";
 const NAME_DB: &str = "DB_MANAGER";
+const NAME_AI: &str = "AI_MODEL";
+
 
 fn build_graph(graph: &mut Graph) {
 
@@ -63,5 +67,9 @@ fn build_graph(graph: &mut Graph) {
         .build(move |actor| actor::db_manager::run(actor, crawler_rx.clone()) 
                , SoloAct);
 
+    // database actor
+    actor_builder.with_name(NAME_AI)
+        .build(move |actor| actor::ai_model::run(actor) 
+               , SoloAct);
 }
 
