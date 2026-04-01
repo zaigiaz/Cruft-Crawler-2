@@ -75,9 +75,10 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<Fi
 	    actor.try_send(&mut crawler_tx, new_metadata).expect("couldn't send to DB");
 	}
 
-	actor.request_shutdown().await;
+    actor.wait_shutdown().await;
     }
-	return Ok(());
+
+    return Ok(());
 }
 
 

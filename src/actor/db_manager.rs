@@ -43,7 +43,9 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A,
     while actor.is_running(|| crawler_rx.is_closed_and_empty()) {
 
 	let mut batch_size = 0;
-	let unit_cnt  = actor.avail_units(&mut crawler_rx);
+
+	/// NOTE :: Dead CODE ?
+	// let unit_cnt  = actor.avail_units(&mut crawler_rx);
 
 	await_for_any!(actor.wait_avail(&mut crawler_rx, BATCH_SIZE),
 		       actor.wait_timeout(Duration::from_secs(5)));
@@ -67,6 +69,7 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A,
 
 	// database.apply_batch(batch)?;
 	loop_ctr = 0;	
+	
     }
 
   Ok(())

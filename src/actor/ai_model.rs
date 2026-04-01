@@ -34,7 +34,6 @@ pub async fn run(actor: SteadyActorShadow) -> Result<(),Box<dyn Error>> {
 /// Internal behaviour for the actor
 async fn internal_behavior<A: SteadyActor>(mut actor: A) -> Result<(),Box<dyn Error>> {
 
-
     // load the AI model and run;
     /// TODO :: figure out why not running
 	let engine = LlmEngine::load_new_model(
@@ -54,6 +53,7 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A) -> Result<(),Box<dyn Er
     let resp = engine.infer_model(&initial_prompt)?;
     
     println!("{:?}", resp);
+    actor.request_shutdown().await;
 
     return Ok(());
 } 

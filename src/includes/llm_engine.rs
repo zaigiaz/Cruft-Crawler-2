@@ -33,7 +33,7 @@ impl LlmEngine {
         let log_options = LogOptions::default().with_logs_enabled(true);
         send_logs_to_tracing(log_options);
 
-	/// TODO :: LOAD FROM FILE ERROR
+	/// TODO :: FIX VOTING RULES :: CURRENTLY STOPS HERE
 	let model = match LlamaModel::load_from_file(&backend, model_path, &model_params) {
 	    Ok(m) => m,
 	    Err(e) => {
