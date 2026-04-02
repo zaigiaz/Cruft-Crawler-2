@@ -43,22 +43,30 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<Fi
     // TODO :: replace this with config file or setup at command line
     let crawl_path = Path::new("/home/zaigiaz/Programming/Cruft-Crawler-2/src/");    
 
-
     // create write_ahead log for crawler, and rotate it every 5kb
     let mut write_ahead_log = RotatingLog {
-	path: "/home/shayne/Programming/Cruft-Crawler-2/data/write_ahead_log.txt",
+	path: "/home/zaigiaz/Programming/Cruft-Crawler-2/data/write_ahead_log.txt",
 	max_size: 1024 * 5,
     };
         
+    // Iterator for our walkdir crate over some path
+    let mut walker = walkdir::WalkDir::new(crawl_path)
+	.into_iter()
+	.filter_entry(|e| !our_filter(e));
+
+    // while loop with channel mark closed detection, ends after iterator has returned last
     while actor.is_running(|| crawler_tx.mark_closed()) {
 
-	let walker = walkdir::WalkDir::new(crawl_path).into_iter();
+	// Read the directory (recursively, with filter)
+	match walker.next() {	    
+	    None => break,
+	    Some(entry_res) => {
 
-	// Read the directory (non-recursive)
-	for entry_res in walker.filter_entry(|e| !our_filter(e)) {
+	    await_for_all!(actor.wait_vacant(&mut crawler_tx, 1));
 
             let entry = entry_res?;
 	    
+	    // skip all directories returned by iterator
 	    if !entry.metadata()?.is_file() {
 		continue;
 	    }
@@ -68,16 +76,15 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<Fi
 	    // debugging statement for showcase
 	    // new_metadata.meta_print();
 	    
-	    actor.wait_vacant(&mut crawler_tx, 1).await;
-
 	    write_ahead_log.write_log(&new_metadata.abs_path);
-	    
+
 	    actor.try_send(&mut crawler_tx, new_metadata).expect("couldn't send to DB");
+	    }
 	}
-
-    actor.wait_shutdown().await;
     }
-
+    
+    // TODO :: restructure this loop for clean actor shutdown	
+    actor.wait_shutdown().await;
     return Ok(());
 }
 

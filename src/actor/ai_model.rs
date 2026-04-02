@@ -53,6 +53,7 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A) -> Result<(),Box<dyn Er
     let resp = engine.infer_model(&initial_prompt)?;
     
     println!("{:?}", resp);
+
     actor.request_shutdown().await;
 
     return Ok(());
