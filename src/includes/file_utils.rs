@@ -1,5 +1,6 @@
 use steady_state::StateGuard;
 use std::io::prelude::*;
+use std::fmt::Write as FmtWrite;
 use walkdir::{WalkDir,DirEntry, IntoIter};
 use std::ffi::OsStr;
 use filetime::FileTime;
@@ -45,17 +46,25 @@ impl FileMetadata {
 
     /// turn the struct into a formatted prompt to be sent to the LLM
     pub fn to_prompt(&self) -> Result<(String), Box<dyn Error>> {
-        let prompt = format!(
-            "You are an automated file management assistant. You must make a single \
-             decision about whether to keep or delete a file based solely on the \
-             metadata provided. Do not explain, justify, or add anything else. Your \
-             response must be exactly one word: either \"keep\" or \"delete\".\n\
-             The absolute path of the file is {}\n\
-             size of the file is {}\n\
-             is the file read‑only? {}\n\
-             the last modified time was {} minutes ago",
-            self.abs_path, self.size, self.readonly, self.modified
-        );
+
+	let mut prompt = String::new();
+
+	writeln!(
+            &mut prompt,
+            r#"
+You are an automated file management assistant. You must make a single
+decision about whether to keep or delete a file based solely on the
+metadata provided. Do not explain, justify, or add anything else.
+
+Absolute path   : {}
+Size (bytes)    : {}
+Read-only       : {}
+Last modified   : {} seconds ago
+
+please provide a single word reponse, either 'keep' or 'delete'
+"#,
+            self.abs_path, self.size, self.readonly, (self.modified - self.created)
+	)?;
 
         Ok(prompt)
     }

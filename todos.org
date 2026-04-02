@@ -1,7 +1,9 @@
 * The Rewrite
 
-- Fix Voting Issues between Actors so AI model can run without immediatly getting voted out
-- Figure out how to parse model output for yes/no
+- Figure out how to parse model output for yes/no, (simple regex match, lowercase and uppercase)
+
+debugging where executable, is, please use env.rs for this later
+- println!("cwd: {:?}", std::env::current_dir()?);
 
 - Fix the TUI stuff, get it working, and reading DB
 

@@ -40,11 +40,11 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<Fi
     let mut state = state.lock(|| CrawlerState{abs_path: String::new()}).await;
     let mut crawler_tx = crawler_tx.lock().await;
 
-    /// TODO :: finish this up
-    // let ConfigStruct: Config = read_toml()?;
-    // let crawl_str: String  = ConfigStruct.crawler.crawl_path;
+    // read crawl path from config.toml
+    let ConfigStruct: Config = read_toml("./config.toml")?;
+    let crawl_str: String  = ConfigStruct.crawler.crawl_path;
 
-    let crawl_path = Path::new("/home/zaigiaz/Programming/Cruft-Crawler-2/src/includes/");
+    let crawl_path = Path::new(&crawl_str);
 
     // create write_ahead log for crawler, and rotate it every 5kb
     let mut write_ahead_log = RotatingLog {

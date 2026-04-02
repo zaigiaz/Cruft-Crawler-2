@@ -3,6 +3,7 @@
 use steady_state::*;
 use crate::includes::llm_engine::LlmEngine;
 use crate::includes::file_utils::FileMetadata;
+use crate::includes::config::*;
 use std::process;
 
 use llama_cpp_2::context::params::LlamaContextParams;
@@ -17,7 +18,8 @@ use std::num::NonZeroU32;
 use std::{any, fs};
 
 // TODO :: make this into an option for toml configuration file
-const MODEL_FILE_PATH: &str = "/home/zaigiaz/third_party/ai_models/Qwen/Qwen3-4B-Instruct-2507-Q8_0.gguf";
+// const MODEL_FILE_PATH: &str = "/home/zaigiaz/third_party/ai_models/Qwen/Qwen3-4B-Instruct-2507-Q8_0.gguf";
+
 
 /// run function for the AI model actor
 pub async fn run(actor: SteadyActorShadow, ai_rx: SteadyRx<FileMetadata>) -> Result<(),Box<dyn Error>> {
@@ -34,6 +36,9 @@ pub async fn run(actor: SteadyActorShadow, ai_rx: SteadyRx<FileMetadata>) -> Res
 
 /// Internal behaviour for the actor
 async fn internal_behavior<A: SteadyActor>(mut actor: A, ai_rx: SteadyRx<FileMetadata>) -> Result<(),Box<dyn Error>> {
+
+    let ConfigStruct: Config = read_toml("./config.toml")?;
+    let MODEL_FILE_PATH: &str = ConfigStruct.ai_model.model_path.as_str();
 
     // load the AI model and run;
     let engine = LlmEngine::load_new_model(
@@ -54,9 +59,10 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A, ai_rx: SteadyRx<FileMet
     /// TODO :: Cant figure out why I am getting actor panics from this right now.
     let recieved = actor.try_take(&mut ai_rx).expect("recieving metadata from DB, AI Model <- Database");
     let metadata_prompt_message = recieved.to_prompt()?.to_string();
+    println!("{}", metadata_prompt_message);
 
     let resp = engine.infer_model(&metadata_prompt_message)?;
-    println!("{:?}", resp);    
+    println!("Here is the AI reponse: {}", resp);
     }
 
     actor.request_shutdown().await;
