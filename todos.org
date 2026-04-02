@@ -15,12 +15,12 @@
 - test running for multiple days/week
 - record demo video for presentation
 
-* TUI
+** TUI
 - list operations, write code to actually delete files given a path.
 - color coding for nice output?
 - user prompt for which directory, etc.
 
-* Project Wrap-up
+** Project Wrap-up
 - Create Slides, Notes, for presentations on Llama.cpp and Local LLM inference
 - Write Mockup of all the models we tried and the strengths/weaknesses of different approaches.
 

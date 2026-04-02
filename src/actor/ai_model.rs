@@ -17,7 +17,7 @@ use std::num::NonZeroU32;
 use std::{any, fs};
 
 // TODO :: make this into an option for toml configuration file
-const MODEL_FILE_PATH: &str  = "/home/zaigiaz/third_party/ai_models/Qwen/Qwen3-4B-Instruct-2507-Q8_0.gguf";
+const MODEL_FILE_PATH: &str = "/home/zaigiaz/third_party/ai_models/Qwen/Qwen3-4B-Instruct-2507-Q8_0.gguf";
 
 /// run function for the AI model actor
 pub async fn run(actor: SteadyActorShadow, ai_rx: SteadyRx<FileMetadata>) -> Result<(),Box<dyn Error>> {
@@ -41,16 +41,18 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A, ai_rx: SteadyRx<FileMet
     )?;
     
     let mut ai_rx = ai_rx.lock().await;
-
-    let initial_prompt = "Hello, you are an AI model, please provide basic response, like a greeting statement, short and concise.";
-
+    
     while actor.is_running(|| ai_rx.is_closed_and_empty()) {
 
     /// TODO :: write decision to file, but later, to TUI
     /// TODO :: LLM should provide one word response, we could check with regex to make sure, then re-prompt if outlier?
 
+    await_for_all!(actor.wait_avail(&mut ai_rx, 1));
+
     // take the message from the channel and then turn the metadata into a prompt message for the channel
-    let recieved = actor.try_take(&mut ai_rx).expect("message recieved from database");
+
+    /// TODO :: Cant figure out why I am getting actor panics from this right now.
+    let recieved = actor.try_take(&mut ai_rx).expect("recieving metadata from DB, AI Model <- Database");
     let metadata_prompt_message = recieved.to_prompt()?.to_string();
 
     let resp = engine.infer_model(&metadata_prompt_message)?;

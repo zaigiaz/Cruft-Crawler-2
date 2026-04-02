@@ -31,7 +31,7 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A, ai_tx: SteadyTx<FileMet
     let database = DbState::open(db_file_name)?;
 
     // TODO :: scan db and get last key for this, using iterator over the file_tree
-    let iter: sled::Iter;
+    // let iter: sled::Iter;
 
     while actor.is_running(|| crawler_rx.is_closed_and_empty()) {
 
@@ -49,9 +49,12 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A, ai_tx: SteadyTx<FileMet
 	for _ in 0..batch_size {
 	    let recieved = actor.try_take(&mut crawler_rx);
 	    let mut msg = recieved.expect("expected File_Meta Struct (crawler -> db_actor)");
-	    
+
 	    database.insert(&msg)?;
 
+	    /// TODO :: Data is clean until sending from here
+	    // send to ai_model, await for room because inference takes 2-3 minutes
+	    // actor.send_async(&mut ai_tx, msg, SendSaturation::AwaitForRoom);
 	    actor.try_send(&mut ai_tx, msg);
 	}
     }

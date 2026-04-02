@@ -1,15 +1,6 @@
-title = "config-file"
+[ai_model]
+model_path = "/home/zaigiaz/third_party/ai_models/Qwen/Qwen3-4B-Instruct-2507-Q8_0.gguf"
 
-[directory]
-## settings for the crawling actor to use	
-path = ""
-last-accessed = ""
-
-[database]
-## settings for the database configuration
-copies = 1
-batch-size = 15
-
-[LLM]
-## etc variables here for LLM settings that we can tweak
-temp = 1.0
+[crawler]
+# for testing purposes
+crawl_path = "/home/zaigiaz/Programming/Cruft-Crawler-2/src/test_directory/"

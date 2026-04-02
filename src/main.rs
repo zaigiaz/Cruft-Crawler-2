@@ -18,6 +18,7 @@ pub(crate) mod includes {
     pub(crate) mod write_ahead_log;
     pub(crate) mod env;
     pub(crate) mod llm_engine;
+    pub(crate) mod config;
 }
 
 fn main() -> Result<(), Box<dyn Error>> {

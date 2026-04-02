@@ -6,12 +6,13 @@ use std::error::Error;
 
 use crate::includes::file_utils::*;
 use crate::includes::write_ahead_log::*;
-
+use crate::includes::config::*;
 
 /// holds last path visited of crawler actor
 pub(crate) struct CrawlerState {
     pub(crate) abs_path:  String,    
 }
+
 
 /// run function for crawler actor
 pub async fn run(actor: SteadyActorShadow, crawler_tx: SteadyTx<FileMetadata>,
@@ -39,9 +40,11 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<Fi
     let mut state = state.lock(|| CrawlerState{abs_path: String::new()}).await;
     let mut crawler_tx = crawler_tx.lock().await;
 
-    // let search_path = read_config();
-    // TODO :: replace this with config file or setup at command line
-    let crawl_path = Path::new("/home/zaigiaz/Programming/Cruft-Crawler-2/src/");    
+    /// TODO :: finish this up
+    // let ConfigStruct: Config = read_toml()?;
+    // let crawl_str: String  = ConfigStruct.crawler.crawl_path;
+
+    let crawl_path = Path::new("/home/zaigiaz/Programming/Cruft-Crawler-2/src/includes/");
 
     // create write_ahead log for crawler, and rotate it every 5kb
     let mut write_ahead_log = RotatingLog {
@@ -72,18 +75,13 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<Fi
 	    }
 	    
 	    let new_metadata = get_file_metadata(entry)?;
-	    
-	    // debugging statement for showcase
-	    // new_metadata.meta_print();
-	    
+	    	    
 	    write_ahead_log.write_log(&new_metadata.abs_path);
 
 	    actor.try_send(&mut crawler_tx, new_metadata).expect("couldn't send to DB");
 	    }
 	}
     }
-    
-    // TODO :: restructure this loop for clean actor shutdown	
     actor.wait_shutdown().await;
     return Ok(());
 }
@@ -103,11 +101,8 @@ fn test_crawler() -> Result<(), Box<dyn Error>> {
     let (crawler_tx, crawler_rx)                   = channel_builder.build();
     let state = new_state();
 
-
     graph.actor_builder().with_name("UnitTest")
         .build(move |context| internal_behavior(actor, crawler_tx, state), SoloAct);
-
-
 
     // TODO :: test sending on crawler_tx
     // assert_steady_tx_eq_send!(&crawler_tx, File_Meta struct)
@@ -118,15 +113,13 @@ fn test_crawler() -> Result<(), Box<dyn Error>> {
     let hashed_output: String = visit_dir(test_str);
     assert_eq!(hashed_output, test_output);
 
-
     // TODO :: test visit_dir function
     // test_crawl = visit_dir("test directory path")
-
     
     graph.start();
     // because clean shutdown waits for closed and empty
     // , it does not happen until our test data is digested. 
-    graph.request_shutdown(); // critical before block_until_stopped
+    graph.request_shutdown(); 
     Ok(())
 	}
 }
