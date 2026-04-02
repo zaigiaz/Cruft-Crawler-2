@@ -48,8 +48,8 @@ fn build_graph(graph: &mut Graph) {
         .with_filled_percentile(Percentile::p80());
 
     // Build Channels for Sender and Reciever Tx and Rx for communication between actors
-    let (crawler_tx, crawler_rx)                   = channel_builder.build();
-
+    let (crawler_tx, crawler_rx)  = channel_builder.build();
+    let (ai_tx, ai_rx)            = channel_builder.build();
     
     // build actor interface
     let actor_builder = graph.actor_builder()
@@ -59,17 +59,17 @@ fn build_graph(graph: &mut Graph) {
     // crawler actor
     let state = new_state();
     actor_builder.with_name(NAME_CRAWLER)
-        .build(move |actor| actor::crawler::run(actor, crawler_tx.clone(), state.clone()) 
+        .build(move |actor| actor::crawler::run(actor, crawler_tx.clone(), state.clone())
                , SoloAct);
 
     // database actor
     actor_builder.with_name(NAME_DB)
-        .build(move |actor| actor::db_manager::run(actor, crawler_rx.clone()) 
+        .build(move |actor| actor::db_manager::run(actor, ai_tx.clone(), crawler_rx.clone()) 
                , SoloAct);
 
     // database actor
     actor_builder.with_name(NAME_AI)
-        .build(move |actor| actor::ai_model::run(actor) 
+        .build(move |actor| actor::ai_model::run(actor, ai_rx.clone())
                , SoloAct);
 }
 

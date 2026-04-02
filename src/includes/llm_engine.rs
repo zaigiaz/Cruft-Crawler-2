@@ -33,7 +33,6 @@ impl LlmEngine {
         let log_options = LogOptions::default().with_logs_enabled(true);
         send_logs_to_tracing(log_options);
 
-	/// TODO :: FIX VOTING RULES :: CURRENTLY STOPS HERE
 	let model = match LlamaModel::load_from_file(&backend, model_path, &model_params) {
 	    Ok(m) => m,
 	    Err(e) => {
@@ -42,8 +41,7 @@ impl LlmEngine {
 	    }
 	};
 
-	println!("here is a new printing line!");
-
+	/// TODO :: use this code block?
 	// use libc to set priority and pin process
         // #[cfg(target_os = "linux")]
         // {

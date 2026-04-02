@@ -14,7 +14,7 @@ pub(crate) struct CrawlerState {
 }
 
 /// run function for crawler actor
-pub async fn run(actor: SteadyActorShadow, crawler_tx: SteadyTx<FileMetadata>, 
+pub async fn run(actor: SteadyActorShadow, crawler_tx: SteadyTx<FileMetadata>,
                  state: SteadyState<CrawlerState>) -> Result<(),Box<dyn Error>> {
 
     let actor = actor.into_spotlight([], [&crawler_tx]);
