@@ -18,7 +18,7 @@ pub struct DbState {
     file_tree: sled::Tree,     // LLM reads this
     hash_tree: sled::Tree,     // TUI reads this
     deletion_tree: sled::Tree, // TUI reads this
-    keep_tree: sled::Tree,  // TUI reads this
+    keep_tree: sled::Tree,     // TUI reads this
 }
 
 /// implemented functions for DbState

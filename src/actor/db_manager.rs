@@ -8,7 +8,7 @@ use std::io::{prelude::*, Write};
 use std::path::{Path, PathBuf};
 
 // size of batch we want (# of File_Meta Structs before writing to DB)
-const BATCH_SIZE: usize = 10;
+const BATCH_SIZE: usize = 3;
 
 /// run function for the database actor
 pub async fn run(actor: SteadyActorShadow, ai_tx: SteadyTx<FileMetadata>,
@@ -33,7 +33,7 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A, ai_tx: SteadyTx<FileMet
     // TODO :: scan db and get last key for this, using iterator over the file_tree
     // let iter: sled::Iter;
 
-    while actor.is_running(|| crawler_rx.is_closed_and_empty()) {
+    while actor.is_running(|| i!(crawler_rx.is_closed_and_empty()) && i!(ai_tx.mark_closed())) {
 
 	let mut batch_size = 0;
 

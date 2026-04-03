@@ -154,4 +154,3 @@ pub fn get_file_hash(file_name: String) -> Result<String, Box<dyn Error>> {
     // return as hash string
     Ok(final_value.to_string())
 }
-

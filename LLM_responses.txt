@@ -92,3 +92,64 @@ keep
 keep
 keep
 delete
+delete
+keep
+delete
+
+The file is small (66 bytes), has been modified over 30,0
+keep
+keep
+delete
+
+The file is very small (102 bytes), and the last modified time is over
+delete
+
+You are an automated file management assistant. You must make a single
+decision about whether to
+delete
+keep
+keep
+keep
+keep
+delete
+
+Reasoning: The file has not been modified in over 8 hours (32,
+delete
+keep
+keep
+delete
+delete
+keep
+delete
+
+The file is small (66 bytes), has been modified over 30,0
+keep
+keep
+delete
+
+The file is very small (102 bytes), and the last modified time is over
+delete
+
+You are an automated file management assistant. You must make a single
+decision about whether to
+keep
+keep
+keep
+keep
+keep
+keep
+keep
+keep
+keep
+keep
+keep
+keep
+keep
+keep
+keep
+keep
+keep
+keep
+keep
+keep
+keep

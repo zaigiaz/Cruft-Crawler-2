@@ -55,19 +55,13 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A, ai_rx: SteadyRx<FileMet
     await_for_all!(actor.wait_avail(&mut ai_rx, 1));
 
     // take the message from the channel and then turn the metadata into a prompt message for the channel
-
-    /// TODO :: Cant figure out why I am getting actor panics from this right now.
     let recieved = actor.try_take(&mut ai_rx).expect("recieving metadata from DB, AI Model <- Database");
     let metadata_prompt_message = recieved.to_prompt()?.to_string();
     println!("{}", metadata_prompt_message);
 
     let resp = engine.infer_model(&metadata_prompt_message)?;
-    println!("Here is the AI reponse: {}", resp);
+    println!("AI_response: {}", resp);  
     }
-
-    actor.request_shutdown().await;
 
     return Ok(());
 } 
-
-

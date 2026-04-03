@@ -3,4 +3,4 @@ model_path = "/home/zaigiaz/third_party/ai_models/Qwen/Qwen3-4B-Instruct-2507-Q8
 
 [crawler]
 # for testing purposes
-crawl_path = "/home/zaigiaz/Programming/Cruft-Crawler-2/src/test_directory/"
+crawl_path = "/home/zaigiaz/Programming/Cruft-Crawler-2/src/includes/"
