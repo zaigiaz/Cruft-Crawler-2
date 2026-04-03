@@ -61,8 +61,14 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<Fi
     while actor.is_running(|| crawler_tx.mark_closed()) {
 
 	// Read the directory (recursively, with filter)
+
+	/// TODO :: Currently churning after hitting last item in iterator, fix this somehow
 	match walker.next() {	    
-	    None => break,
+	    None => { 
+		actor.request_shutdown();
+		println!("CHURNING");
+	    },
+
 	    Some(entry_res) => {
 
 	    await_for_all!(actor.wait_vacant(&mut crawler_tx, 1));
@@ -80,10 +86,9 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A, crawler_tx: SteadyTx<Fi
 
 	    actor.try_send(&mut crawler_tx, new_metadata).expect("couldn't send to DB");
 	    }
-
 	}		
-    actor.wait_shutdown().await;
     }
+    actor.request_shutdown();
     return Ok(());
 }
 

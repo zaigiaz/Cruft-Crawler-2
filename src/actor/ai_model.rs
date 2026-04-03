@@ -52,15 +52,17 @@ async fn internal_behavior<A: SteadyActor>(mut actor: A, ai_rx: SteadyRx<FileMet
     /// TODO :: write decision to file, but later, to TUI
     /// TODO :: LLM should provide one word response, we could check with regex to make sure, then re-prompt if outlier?
 
-    await_for_all!(actor.wait_avail(&mut ai_rx, 1));
+	let wait_condition = await_for_all!(actor.wait_avail(&mut ai_rx, 1));
 
-    // take the message from the channel and then turn the metadata into a prompt message for the channel
-    let recieved = actor.try_take(&mut ai_rx).expect("recieving metadata from DB, AI Model <- Database");
-    let metadata_prompt_message = recieved.to_prompt()?.to_string();
-    println!("{}", metadata_prompt_message);
+	// take the message from the channel and then turn the metadata into a prompt message for the channel
+	if wait_condition {
+	    let recieved = actor.try_take(&mut ai_rx).expect("recieving metadata from DB, AI Model <- Database");
+	    let metadata_prompt_message = recieved.to_prompt()?.to_string();
+	    println!("{}", metadata_prompt_message);
 
-    let resp = engine.infer_model(&metadata_prompt_message)?;
-    println!("AI_response: {}", resp);  
+	    let resp = engine.infer_model(&metadata_prompt_message)?;
+	    println!("AI_response: {}", resp);  
+	}
     }
 
     return Ok(());
